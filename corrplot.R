@@ -63,19 +63,34 @@ parser <- ArgumentParser()
 
 parser$add_argument("-fp","--proportion_files",
                     nargs = '+',
-                    default = NULL)
+                    default = NULL,
+                    help = "paths to proportion files to include")
+
 parser$add_argument("-dp",
                     "--proportion_dirs",
                     nargs = '+',
-                    default = NULL)
+                    default = NULL,
+                    help = paste0('path to directory of proportion files. ',
+                                  'All proportion files in dir will be used')
+                    )
 
-parser$add_argument("-o","--out_dir",
-                    default = "/tmp")
+parser$add_argument("-od","--out_dir",
+                    default = "/tmp",
+                    help = 'output directory')
 
 parser$add_argument("-r",
                     "--replicates",
                     default = 1000,
-                    type = 'integer')
+                    type = 'integer',
+                    help = 'number of bootstrap replicates')
+
+parser$add_argument("-or","--order",
+                    default = NULL,
+                    type = 'character',
+                    help = paste0('file containing ordering of types. ',
+                                  'write each cell type to include on ',
+                                  'a new line.')
+                    )
 
 
 args <- parser$parse_args()
@@ -104,6 +119,8 @@ if (!(is.null(args$proportion_files))) {
 wmats <- list()
 types <- c()
 
+
+
 for (res in seq_along(pths)) {
 
   wmats[[res]] <- read.table(pths[res],
@@ -129,6 +146,25 @@ wmats <- lapply(wmats,
 
 wmat <- do.call("rbind",wmats)
 remove(wmats)
+
+if (!(is.null(args$order))) {
+  newOrder <- read.table(args$order,
+                         sep = '\n')
+  newOrder <- as.vector(newOrder[,1])
+  newOrder <- gsub(" ",'-',newOrder)
+  colnames(wmat) <- gsub("\\."," ",colnames(wmat))
+  colnames(wmat) <- gsub("  | ","-",colnames(wmat))
+  newOrder <- intersect(newOrder,colnames(wmat))
+
+  if (length(newOrder) > 1) {
+    wmat <- wmat[,newOrder]
+    print("readjusting order")
+  } else {
+    print("none of the specified types present")
+    print("no readjustment of order")
+  }
+}
+
 
 res <- bootCorr(wmat,
                 replicates = args$replicates)
