@@ -7,9 +7,51 @@ library(reshape2)
 library(ggplot2)
 library(argparse)
 
+subsetTypes <- function(cmat,keepers){
+
+  orinames <- colnames(cmat)
+  xnames <- colnames(cmat)
+
+  patterns <- c("\\.",
+              ",",
+              "_",
+              " ",
+              "-"
+              )
+
+  for (ii in 1:length(patterns)) {
+    xnames <- gsub(patterns[ii],"",xnames)
+    keepers <- gsub(patterns[ii],"",keepers)
+  }
+
+  ynames <- c()
+
+  for (ii in 1:length(keepers)) {
+
+    idxs <- as.vector(sapply(tolower(keepers[ii]),
+                             grepl,tolower(xnames)))
+    if (sum(idxs) > 0) {
+      ynames <- c(ynames,orinames[idxs])
+      }
+   }
+
+  ynames <- unique(ynames)
+
+
+   if (length(ynames) > 0) {
+      cmat <- cmat[orinames,ynames]
+   } else {
+     print("[ERROR] : Bad subsetting")
+   }
+
+   return(cmat)
+}
+
 
 bootCorr <- function(data,
-                     replicates = 100) {
+                     replicates = 100,
+                     alpha = 0.05
+                     ) {
 
   prepArr <- function() {
     z <- array(0,dim = c(ncol(data),
@@ -43,11 +85,11 @@ bootCorr <- function(data,
   res$ci.lower <- apply(corrVals,
                         c(1,2),
                         quantile,
-                        0.025)
+                        alpha / 2.0)
   res$ci.upper <- apply(corrVals,
                         c(1,2),
                         quantile,
-                        0.975)
+                        1-alpha / 2.0)
   
   res$outside <- ifelse(res$ci.lower * res$ci.upper > 0,
                         1,
@@ -81,6 +123,25 @@ parser$add_argument("-t",
                     "--tag",
                     default = '',
                     type = 'character')
+
+parser$add_argument("-s",
+                    "--subset",
+                    nargs = '+',
+                    default = NULL)
+
+parser$add_argument("-nm",
+                    "--name_map",
+                    default = NULL)
+
+
+
+parser$add_argument("-or","--order",
+                    default = NULL,
+                    type = 'character',
+                    help = paste0('file containing ordering of types. ',
+                                  'write each cell type to include on ',
+                                  'a new line.')
+                    )
 
 
 args <- parser$parse_args()
@@ -132,8 +193,30 @@ wmats <- lapply(wmats,
                 function(x){select(x,
                                    types)})
 
-wmat <- do.call("rbind",wmats)
+wmat <- do.call("rbind",
+                wmats)
+
+#print(colnames(wmat))
+
 remove(wmats)
+
+if (!(is.null(args$order))) {
+  newOrder <- read.table(args$order,
+                         sep = '\n')
+  newOrder <- as.vector(newOrder[,1])
+  newOrder <- gsub(" ",'-',newOrder)
+  colnames(wmat) <- gsub("\\."," ",colnames(wmat))
+  colnames(wmat) <- gsub("  | ","-",colnames(wmat))
+  newOrder <- intersect(newOrder,colnames(wmat))
+
+  if (length(newOrder) > 1) {
+    wmat <- wmat[,newOrder]
+    print("readjusting order")
+  } else {
+    print("none of the specified types present")
+    print("no readjustment of order")
+  }
+}
 
 res <- bootCorr(wmat,
                 replicates = args$replicates)
@@ -142,7 +225,55 @@ res$mean <- as.matrix(res$mean)
 
 diag(res$mean) <- NA
 
+
 res$mean <- as.data.frame(res$mean)
+
+if (!is.null(args$subset)) {
+  res$mean <- subsetTypes(res$mean,
+                          keepers = args$subset)
+  res$outside <- res$outside[rownames(res$mean),colnames(res$mean)]
+}
+
+
+if (!is.null(args$name_map)) {
+  reffer <- read.table(args$name_map,
+                       sep = ',',
+                       header=T,
+                       row.names = 1)
+
+  rownames(reffer) <-  gsub(" ","\\.",rownames(reffer))
+  rownames(reffer) <-  gsub("-","\\.",rownames(reffer))
+  rownames(reffer) <-  gsub("\\+","\\.",rownames(reffer))
+
+
+  mapper <- as.vector(reffer$new)
+  names(mapper) <- rownames(reffer)
+
+
+  oCn <- colnames(res$mean)
+  oRn <- rownames(res$mean)
+
+
+  nCn <- mapper[oCn]
+  nRn <- mapper[oRn] 
+
+
+  ordrC <- as.vector( mapper[mapper %in% nCn] )
+  ordrR <- as.vector( mapper[mapper %in% nRn] )
+
+  print(ordrC)
+
+  colnames(res$mean) <- nCn
+  rownames(res$mean) <- nRn
+
+  res$mean <- res$mean[ordrC,ordrR]
+
+  colnames(res$outside) <- nCn
+  rownames(res$outside) <- nRn
+
+  res$outside <- res$outside[ordrC,ordrR]
+
+}
 
 long_res <- res$mean %>%
   as.matrix() %>%
@@ -165,9 +296,11 @@ if (!(is.null(args$tag))) {
   oname <- "corr-plot.png"
 }
 
+n_types <- max(dim(res$mean))
+
 png(file.path(args$out_dir,oname),
-    width = 2000,
-    height = 2000,
+    width = 2000 / 22 * n_types,
+    height = 2000 / 22 * n_types,
     units = "px")
 
 ggplot(long_res, aes(type1,
@@ -178,22 +311,31 @@ ggplot(long_res, aes(type1,
 
   geom_tile(aes(width = 0.9,
                 height = 0.9),
+            vjust = 0,
+            hjust = 0,
             size = 1) +
+
+  coord_equal() +
 
   scale_color_gradient(low = "gray50",
                        high = "black",
                        guide = FALSE
                        ) +
 
-  scale_fill_gradient2(low = "blue",
+  scale_fill_gradient2(low = "#15007e",
                        mid = "white",
-                      high = "red",
+                       high = "#a12727",
                       space = "Lab",
                       na.value = "grey50",
                       guide = "colourbar",
                       aesthetics = "fill") + 
   xlab("") +
   ylab("") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1),text =element_text(size=10))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5),
+        text =element_text(size=40),
+        panel.background = element_rect("white", "white"),
+        legend.title = element_text(size = 15),
+        legend.text = element_text(size = 15)
+        )
 
 dev.off()
