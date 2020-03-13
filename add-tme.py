@@ -27,9 +27,15 @@ def get_crd(df):
 prs = arp.ArgumentParser()
 
 prs.add_argument("-s",'--selections',nargs='+')
+
 prs.add_argument("-o",'--out_dir',required = True)
+
 prs.add_argument("-thr","--threshold",default = 2,type = float)
-prs.add_argument("-x","--source",default = "invasive cancer",type = str)
+
+prs.add_argument("-x","--source",
+                 default = ["invasive cancer","cancer in situ"],
+                 nargs = '+')
+
 prs.add_argument("-c","--col_name",default = 'label')
 
 
@@ -38,7 +44,7 @@ args = prs.parse_args()
 # sel_pths = list(filter(lambda f : f.split('.')[-1]  == "tsv", os.listdir(sel_dir)))
 sel_pths = args.selections
 
-patients = list(map(lambda x : osb.basename(x).split('_')[0],sel_pths))
+patients = list(map(lambda x : osp.basename(x).split('_')[0],sel_pths))
 
 out_dir = args.out_dir 
 ind = args.source
@@ -52,18 +58,21 @@ ecs = []
 fcs = []
 crds = []
 
-
 for p,sel_pth in enumerate( sel_pths ):
 
-    sel = read_file(osp.join(sel_dir,sel_pth))
+    sel = read_file(sel_pth)
     keep = np.any(pd.isna(sel),axis = 1) == False
     sel = sel.iloc[keep.values,:]
     crd = get_crd(sel)
 
     crds.append(crd)
+    # is_tmr_idx = np.zeros(sel.shape[0])
+    # is_non_idx = np.zeros(sel.shape[0])
 
-    is_tmr_idx = sel[col_name].values == ind
-    is_non_idx = sel[col_name].values != ind
+    is_tmr_idx = np.array( [x in ind for x in sel[col_name].values ] )
+    is_non_idx = np.array( [x not in ind for x in sel[col_name].values] )
+
+    print(is_tmr_idx)
 
     is_tmr_name = sel.index.values[is_tmr_idx]
     is_non_name = sel.index.values[is_non_idx]
@@ -97,7 +106,7 @@ for p,sel_pth in enumerate( sel_pths ):
     fcs.append(sel['tumor_dist'].values)
 
     labels = np.array(['distal' for x in range( sel.shape[0] )],dtype = 'object')
-    labels[is_tmr_idx] = ind
+    labels[is_tmr_idx] = 'cancer'
     labels[is_tme] = 'proximal'
 
     sel2 = sel.loc[:,:]
@@ -134,6 +143,7 @@ for p in range(len(patients)):
 fig.colorbar(sc)
 fig.tight_layout()
 
-fig.savefig(osp.join(out_dir,"tumor-dist-thrs-" + str(tme_cutoff) + ".png"))
+fig.savefig(osp.join(out_dir,
+                     "tumor-dist-thrs-" + str(tme_cutoff) + ".png"))
 plt.close("all")
 

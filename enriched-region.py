@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-
+import re
 import os.path as osp
 import argparse as arp
 
@@ -12,32 +12,7 @@ from scipy.stats import ttest_1samp as ttest
 from scipy.stats import wilcoxon
 from scipy.stats import t as tdist
 
-from typing import Union
-
-# def gene_1(x,y,mu = 10):
-#     return mu + x + np.random.normal(0,1,x.shape)
-
-# def gene_2(x,y,mu = 10):
-#     return mu + y + np.random.normal(0,1,y.shape)
-
-# def gene_3(x,y,mu = 10):
-#     return mu + (x-15)**2 + (y-15)**2 + np.random.normal(0,1,x.shape)
-
-# def quadrants(x,y):
-#     labs = np.zeros(x.shape[0]).astype(int)
-#     for ii in range(x.shape[0]):
-#         if x[ii] < 15:
-#             if y[ii] < 15:
-#                 labs[ii] = 1
-#             else:
-#                 labs[ii] = 2
-#         else:
-#             if y[ii] < 15:
-#                 labs[ii] = 3
-#             else:
-#                 labs[ii] = 4
-#     return labs
-
+from typing import Union,Tuple
 
 def _generate_null(xmat,
                    labels,
@@ -62,6 +37,7 @@ def _generate_null(xmat,
 
     return mu_null
 
+
 def enrichment(xmat : np.ndarray,
                labels : np.ndarray,
                n_shuffle : int = 10000,
@@ -78,33 +54,83 @@ def enrichment(xmat : np.ndarray,
     null_dist = _generate_null(xmat,labels,n_shuffle)
 
     diff_dist = true_mean - null_dist
+    std = diff_dist.std(axis = 2)
+    diff_dist = diff_dist.mean(axis =2)
+    diff_dist /= std
 
-    return {"diffs":diff_dist,"regions":uni_labs}
 
-def do_test(diffs : np.ndarray,
-            alt_mu : int = 0,
-            ax : int = 2,
-            )-> np.ndarray:
+    return {'vals':diff_dist,'regions':uni_labs}
 
-    return ttest(diffs,
-                 popmean = alt_mu,
-                 axis = ax,
-                 )
+def stretch(x,
+            min_size = 0,
+            max_size = 80,
+            ):
 
-def get_stats(diffs : np.ndarray,
-              alpha = 0.05,
-              ):
+    _range = x.max(keepdims = True) - x.min(keepdims =True)
+    x_hat =  x - x.min(keepdims = True)
+    x_hat /= _range
 
-    stds = diffs.std(axis =2)
-    mus = diffs.mean(axis =2)
-    n = diffs.shape[2]
-    tstar = tdist.ppf((1-alpha/2),n -1)
+    print(x_hat.max(),x_hat.min())
 
-    stats = dict(mus = mus,
-                 errs = tstar*stds/n**0.5,
-                 )
 
-    return stats
+    _nrange = max_size - min_size
+
+    out = x_hat*_nrange + min_size 
+
+    return out
+
+
+def make_pallete(enr_res : dict,
+                 feat_names : Union[np.ndarray,list],
+                 min_size = 1,
+                 max_size = 520,
+                 )->Tuple[plt.Figure,plt.Axes]:
+
+
+    xx = enr_res['vals']
+
+    n_types = xx.shape[1]
+    n_regions = xx.shape[0]
+    figsize = (5 + n_regions * 0.5,
+               2 + n_types * 0.5)
+
+    fig, ax = plt.subplots(1,1,
+                           figsize = figsize)
+
+    x_pos = np.repeat(np.arange(n_regions),n_types) + 0.5
+    y_pos = np.repeat(np.arange(n_types).reshape(1,-1),
+                    n_regions,axis = 0).flatten()
+
+    s = stretch(np.abs(xx.flatten()),min_size,max_size)
+    is_up = (xx > 0).flatten()
+
+    clr_up = np.array( [67, 191, 85] )
+    clr_dw = np.array( [209, 56, 84] )
+
+    rgba = np.zeros((s.shape[0],3))
+    rgba[is_up,:] = clr_up / 256
+    rgba[is_up == False,:]  = clr_dw / 256
+
+    ax.scatter(x_pos,
+            y_pos,
+            s = s,
+            c = rgba,
+            )
+
+    ax.set_xlabel("Regions")
+    ax.set_ylabel("Types")
+    ax.set_xticks(np.arange(n_regions)+0.5)
+    ax.set_xlim([0,n_regions])
+    ax.set_yticks(np.arange(n_types))
+    ax.set_xticklabels(enr_res['regions'],
+                       rotation = 90)
+    ax.set_yticklabels(feat_names)
+
+    ax.set_aspect("equal")
+
+    fig.tight_layout()
+
+    return(fig,ax)
 
 def make_plots(diffs : np.ndarray,
                regions : np.ndarray,
@@ -192,18 +218,16 @@ def run(features : pd.DataFrame,
 
     enr_res = enrichment(features.values,labels)
 
-    vizlist = make_plots(enr_res['diffs'],
-                        enr_res['regions'],
-                        feats = features.columns.values)
+    fig, ax = make_pallete(enr_res,features.columns.values)
 
-    for key,val in vizlist.items():
-        val[0].savefig(osp.join(out_dir,tag + "region-" + key + ".png"))
+    fig.savefig(osp.join(out_dir,tag + "enrichment.png"))
 
 def main(feats_pth : str,
          label_pth : str,
          label_col : str,
          out_dir : str,
          tag : str,
+         subset_types : list,
          ):
 
     read_file = lambda f : pd.read_csv(f,
@@ -213,12 +237,24 @@ def main(feats_pth : str,
 
     features = read_file(feats_pth)
     labels = read_file(label_pth)
+
+    if subset_types is not None:
+        keep_feat = [ x for x in features.columns.values if \
+                    any([bool(re.search(z.lower(),x.lower())) for z in subset_types])]
+
+        keep_feat = list(set(keep_feat))
+        print(keep_feat)
+        keep_feat = pd.Index(keep_feat)
+        features = features.loc[:,keep_feat]
+
+
     keep = labels.isna().any(axis=1).values == False
     labels = labels.iloc[keep,:]
 
     strint = lambda x : str(int(round(x)))
 
-    new_idx = [ strint(x) + 'x' + strint(y) for x,y in zip(labels['x'].values,labels['y'].values)]
+    new_idx = [ strint(x) + 'x' + strint(y) for \
+                x,y in zip(labels['x'].values,labels['y'].values)]
     labels.index = pd.Index(new_idx)
 
     inter = features.index.intersection(labels.index)
@@ -240,7 +276,14 @@ if __name__ == "__main__":
     prs.add_argument("-lc","--label_col",default = None)
     prs.add_argument("-o","--output")
     prs.add_argument("-t","--tag",default = None)
+    prs.add_argument("-st","--subset_types",default = None,nargs = '+')
 
     args = prs.parse_args()
 
-    main(args.features,args.labels,args.label_col,args.output,args.tag)
+    main(args.features,
+         args.labels,
+         args.label_col,
+         args.output,
+         args.tag,
+         args.subset_types,
+         )

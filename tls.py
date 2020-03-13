@@ -70,10 +70,17 @@ aa("-o",
    "--out_dir",
    default = '/tmp')
 
-aa("-n",
-   "--n_top",
-   default = 10,
-   type = int)
+aa("-z",
+   "--threshold",
+   default = False,
+   action = 'store_true',
+   # type = int,
+   )
+
+aa("-t",
+   "--tag",
+   default = None,
+   )
 
 args = prs.parse_args()
 
@@ -109,9 +116,6 @@ inter = cnt.index.intersection(prop.index)
 prop = prop.loc[inter,:]
 cnt = cnt.loc[inter,:]
 
-
-
-
 n_spots = cnt.shape[0]
 
 type_1 = 'B-cells'
@@ -131,7 +135,7 @@ for s in range(n_spots):
     prod = np.dot(vec,vec.T)
     nprod = prod / prod.sum()
 
-    jprod[s] = nprod[pos_1,pos_2]
+    jprod[s] = nprod[pos_1,pos_2] * 2
 
 jprod = pd.DataFrame(jprod,
                      index = cnt.index,
@@ -143,10 +147,17 @@ res = mod.fit()
 coefs = res.params
 ordr = np.argsort(coefs.values)[::-1]
 coefs = coefs.iloc[ordr]
-pos = get_inflection_point(coefs.values)
-coefs = coefs.iloc[0:pos]
+if args.threshold:
+    pos = get_inflection_point(coefs.values)
+    coefs = coefs.iloc[0:pos]
 
-coefs.to_csv(osp.join(args.out_dir,"tls-associated-2.tsv"),
+if args.tag is not None:
+    tag = '-' + args.tag
+else:
+    tag = ''
+
+coefs.to_csv(osp.join(args.out_dir,
+                      "tls-associated" + tag + ".tsv"),
              sep = '\t',
              header = True,
              index = True)
