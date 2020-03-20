@@ -231,6 +231,7 @@ res$mean <- as.data.frame(res$mean)
 if (!is.null(args$subset)) {
   res$mean <- subsetTypes(res$mean,
                           keepers = args$subset)
+
   res$outside <- res$outside[rownames(res$mean),colnames(res$mean)]
 }
 
@@ -266,14 +267,17 @@ if (!is.null(args$name_map)) {
   colnames(res$mean) <- nCn
   rownames(res$mean) <- nRn
 
-  res$mean <- res$mean[ordrC,ordrR]
+  res$mean <- res$mean[ordrR,ordrC]
 
   colnames(res$outside) <- nCn
   rownames(res$outside) <- nRn
 
-  res$outside <- res$outside[ordrC,ordrR]
+  res$outside <- res$outside[ordrR,ordrC]
 
 }
+
+res$mean <- res$mean[,rev(colnames(res$mean))]
+res$outside <- res$outside[,rev(colnames(res$outside))]
 
 long_res <- res$mean %>%
   as.matrix() %>%
