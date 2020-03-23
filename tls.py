@@ -9,26 +9,39 @@ import os.path as osp
 import statsmodels.api as sm
 from scipy.ndimage import gaussian_filter
 
+from typing import List
 
 
-def clean_axes(ax):
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
+def iprint(s : str) -> None:
+    print("[INFO] : {}".format(s))
 
-def read_file(f,sep = '\t'):
+def read_file(f : str,
+              sep : str = '\t',
+              )->pd.DataFrame:
+
     return pd.read_csv(f,header = 0,index_col = 0, sep = sep)
 
-def joiner(pths,verbose = True):
+def joiner(pths : List[str],
+           verbose : bool = True,
+           file_type : str = '',
+           )->pd.DataFrame:
+
     out = pd.DataFrame([])
     for k,pth in enumerate(pths):
+
         if verbose:
-            print("[INFO] : Reading file {}".format(pth))
+            print("\r[INFO] : Reading{} file [{}/{}] : {}".format(" " + file_type,
+                                                                  k + 1,
+                                                                  len(pths),
+                                                                  pth),
+                  end ='')
+
         out = pd.concat((out,read_file(pth)),sort = False)
         new_index = [str(k) + '_' + x for x in out.index.values]
         out.index = new_index
+
     out[out.isna()] = 0.0
+    print("")
 
     return out
 
@@ -47,13 +60,11 @@ def get_inflection_point(times : np.ndarray,
     if ipoint < min_genes:
         ipoint = np.min((f_times,n_fail))
         print("[WARNING] : Did not find inflection point"
-              " using {} genes instead.".format(ipoint))
+              " using {} features instead.".format(ipoint))
     else:
-        print("[INFO] : Using {} top genes".format(ipoint))
+        print("[INFO] : Using {} top features".format(ipoint))
 
     return ipoint
-
-
 
 prs = arp.ArgumentParser()
 aa = prs.add_argument
@@ -82,20 +93,40 @@ aa("-t",
    default = None,
    )
 
+aa("-i","--use_intercept",
+   default = False,
+   action = 'store_true',
+   )
+
+
+aa("-a","--alpha",
+   default = "0",
+   type = str,
+   )
+
 args = prs.parse_args()
+
+
+if args.tag is not None:
+    tag = '-' + args.tag
+else:
+    tag = ''
+
+
+out_pth = osp.join(args.out_dir,
+                      "tls-associated-$$" + tag + ".tsv")
+
+
+args.alpha = eval(args.alpha)
 
 prop_pths = args.proportion_files
 cnt_pths = args.count_files
 
-
-#prop_pths = ["/home/alma/Documents/PhD/papers/HER2/res/major/ut_H{}_stdata_filtered.tsv/W.2020-03-04130406.862404.tsv".format(x) for x in range(1,4)]
-#cnt_pths = ["/home/alma/Documents/PhD/papers/HER2/data/linnea-data/ut_H{}_stdata_filtered.tsv.gz".format(x) for x in range(1,4)]
-
 prop_pths.sort()
 cnt_pths.sort()
 
-prop = joiner(prop_pths)
-cnt = joiner(cnt_pths)
+prop = joiner(prop_pths,file_type = 'proportion')
+cnt = joiner(cnt_pths, file_type = 'count')
 
 
 libSize = cnt.values.sum(axis = 1,keepdims= True)
@@ -103,6 +134,9 @@ nObs = cnt.values.sum(axis = 0, keepdims = True)
 
 keep_genes = nObs.flatten() > 10
 keep_spots = libSize.flatten() > 0
+
+# std = cnt.values.std(axis=1,keepdims = True)
+# mu = cnt.values.mean(axis=1,keepdims = True)
 
 cnt = pd.DataFrame(np.divide(cnt.values, libSize,where = libSize > 0),
                    index = cnt.index,
@@ -116,6 +150,11 @@ inter = cnt.index.intersection(prop.index)
 prop = prop.loc[inter,:]
 cnt = cnt.loc[inter,:]
 
+
+if args.use_intercept:
+    iprint(">>> including intercept")
+    cnt['intercept'] = np.ones(cnt.shape[0])
+
 n_spots = cnt.shape[0]
 
 type_1 = 'B-cells'
@@ -124,85 +163,72 @@ type_2 = 'T-cells'
 pos_1 = np.argmax(prop.columns == type_1)
 pos_2 = np.argmax(prop.columns == type_2)
 
-# crd = np.array([x.split('x') for x \
-#                 in  cnt.index.values]).astype(float)
 
 jprod = np.zeros(n_spots)
 
+iprint("computing TLS-Score")
 for s in range(n_spots):
-
     vec = prop.values[s,:].reshape(-1,1)
     prod = np.dot(vec,vec.T)
     nprod = prod / prod.sum()
+    N = prod.shape[0]
 
     jprod[s] = nprod[pos_1,pos_2] * 2
+    jprod[s] -= (nprod.sum() / (0.5*(N**2 + N)))
+
 
 jprod = pd.DataFrame(jprod,
                      index = cnt.index,
                      columns = ['probability'])
 
-mod = sm.OLS(jprod,cnt)
-res = mod.fit()
+
+iprint("computing coefficients")
+if args.alpha > 0 :
+
+    iprint(">>> using regularization with : alpha = {}".format(args.alpha))
+
+mod = sm.OLS(jprod.values,cnt.values)
+res = mod.fit_regularized(L1_wt = 0,
+                          alpha = args.alpha,
+                          )
 
 coefs = res.params
+
+coefs = pd.Series(coefs,
+                  index = cnt.columns,
+                   )
+
 ordr = np.argsort(coefs.values)[::-1]
 coefs = coefs.iloc[ordr]
-if args.threshold:
-    pos = get_inflection_point(coefs.values)
-    coefs = coefs.iloc[0:pos]
 
-if args.tag is not None:
-    tag = '-' + args.tag
-else:
-    tag = ''
 
-coefs.to_csv(osp.join(args.out_dir,
-                      "tls-associated" + tag + ".tsv"),
+complete_out_pth = out_pth.replace("$$","complete")
+iprint("saving complete results to : {}".format(complete_out_pth))
+coefs.to_csv(complete_out_pth,
              sep = '\t',
              header = True,
              index = True)
 
-# marker_size = 5
-# fig, ax = plt.subplots(1,11)
 
-# ax[0].scatter(crd[:,0],
-#             crd[:,1],
-#             c = jprod.values.flatten(),
-#             s = marker_size,
-#               cmap = plt.cm.Reds)
+if args.threshold:
+    bs =  np.arange(coefs.shape[0])
+    if args.use_intercept:
+        b0 = np.argmax(coefs.index == 'intercept')
+        bs = bs[coefs.index != 'intercept']
 
-# ax[0].set_aspect("equal")
-# ax[0].set_title("Enrichement")
+    pos = get_inflection_point(coefs.values[bs])
+    sel = bs[0:pos]
 
-# for ii in range(1,11):
+    if args.use_intercept:
+        sel = np.append(sel,b0)
 
-#     gene = top.index[ii-1]
-#     vals = cnt[gene].values
-#     vals = vals / vals.max()
-#     rgba = np.zeros((n_spots,4))
-#     rgba[:,2] = 1
-#     rgba[:,3] = vals
+    coefs = coefs.iloc[sel]
 
-#     ax[ii].scatter(crd[:,0],
-#                 crd[:,1],
-#                 c = jprod.values.flatten(),
-#                 s = marker_size,
-#                 alpha = 0.8,
-#                 cmap = plt.cm.Reds)
+    top_out_pth = out_pth.replace("$$","top")
+    iprint("saving top results to : {}".format(top_out_pth))
+    coefs.to_csv(top_out_pth,
+                sep = '\t',
+                header = True,
+                index = True)
 
-
-#     ax[ii].scatter(crd[:,0],
-#                 crd[:,1],
-#                 c = rgba,
-#                 s = marker_size,
-#                 )
-
-
-
-#     ax[ii].set_aspect("equal")
-#     ax[ii].set_title(gene)
-
-# for aa in ax:
-#     clean_axes(aa)
-# plt.show()
-
+iprint("TLS-analysis completed")
