@@ -49,11 +49,10 @@ def main():
        required = False,
        default = None,
        )
-    aa("-ss","--sign_seed",
+    aa("-l","--lim",
        required = False,
-       type = int,
-       choices = [1,-1],
-       default = 1,
+       default = 0,
+       type = float,
        )
 
 
@@ -108,7 +107,7 @@ def main():
     fig,ax = make_rank_plot(coefs,
                             n_top,
                             args.select_genes,
-                            args.sign_seed,
+                            args.lim,
                             )
 
     if args.tag is not None:
@@ -128,7 +127,7 @@ def main():
 def make_rank_plot(coefs : pd.DataFrame,
                    n_top : int,
                    sel_gen : list = None,
-                   sign_seed : int = 1,
+                   lim : float = 2,
                    )-> Tuple[plt.Figure,plt.Axes]:
 
     font_dict = {'fontfamily':'calibri',
@@ -161,7 +160,7 @@ def make_rank_plot(coefs : pd.DataFrame,
                           1,
                           figsize = figsize)
 
-    dy = np.abs(np.diff(coefs.values.flatten()).mean())
+    dy = 300*np.abs(np.diff(coefs.values.flatten()).mean())
 
     x_pos_bg = np.array(bg_rank)
     y_pos_bg = coefs.values.flatten()[bg_rank]
@@ -185,16 +184,28 @@ def make_rank_plot(coefs : pd.DataFrame,
                 marker = '.',
                 alpha = 0.6,
                 )
-
+        
     if sel_rank is not None:
-        sgn = sign_seed
-
+        y_pos_text = None
         for (k,v) in sel_rank.items():
 
             x_pos = v
             y_pos = coefs.values.flatten()[v]
             x_pos_text =  x_pos+1000 + np.random.normal(10,1)
-            y_pos_text = sgn*300*dy + y_pos + np.random.normal(0,2*dy)
+
+            if y_pos_text is not None:
+                y_high = y_pos + dy
+                y_low =  y_pos - dy
+                y_cand = (y_high,y_low)
+                get_dist = lambda x : np.abs(y_pos_text - x)
+                dists = get_dist(y_cand)
+                if all([x/dy > lim for x in dists]):
+                    y_pos_text = y_cand[np.argmin(dists)]
+                else:
+                    y_pos_text = y_cand[np.argmax(dists)]
+            else:
+                y_pos_text = dy + y_pos 
+
 
             ax.plot((x_pos_text,x_pos),
                     (y_pos_text,y_pos),
@@ -213,8 +224,6 @@ def make_rank_plot(coefs : pd.DataFrame,
                     y = y_pos_text,
                     **font_dict,
                     )
-
-            sgn *= -1
 
     ax.tick_params(axis='both',
                 which='major',
