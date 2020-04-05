@@ -1,1 +1,0 @@
-/home/alma/ST-2018/camilla/scripts/correlation.py
