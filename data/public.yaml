@@ -1,0 +1,20 @@
+---
+# Links and references to data resources used
+
+spatial_data:
+  visium_breast_cancer:
+    id: Block_A
+    link: https://support.10xgenomics.com/spatial-gene-expression/datasets/1.0.0/V1_Breast_Cancer_Block_A_Section_1  
+  ST_ra:
+    id: CN94_C1
+    link: https://www.spatialresearch.org/wp-content/uploads/2019/12/RA-and-SpA-Count-matrices.zip
+  ST_developmental_heart:
+    id: C2_CN73
+    link: https://www.spatialresearch.org/wp-content/uploads/2019/10/Developmental_heart_ST.zip
+  ST_melanoma:
+    id: ST_mel1
+    link: https://www.spatialresearch.org/wp-content/uploads/2019/03/ST-Melanoma-Datasets_1.zip
+
+sc_data:
+  human_breast_cancer: bioRxiv
+...
