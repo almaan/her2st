@@ -27,6 +27,8 @@ def joiner(pths : List[str],
            file_type : str = '',
            )->pd.DataFrame:
 
+    """join multiple count files"""
+
     out = pd.DataFrame([])
     for k,pth in enumerate(pths):
 
@@ -51,6 +53,8 @@ def compute_tls_score(prop : pd.DataFrame,
                b_name : str = "B-cells",
                t_name : str = "T-cells",
                )-> np.ndarray:
+
+    """compute tls score from prop file"""
 
     n_spots = prop.shape[0]
     pos_1 = np.argmax(prop.columns == b_name)
@@ -79,6 +83,8 @@ def fit_tls_model(Y : pd.DataFrame,
                   x : pd.DataFrame,
                   alpha : float = 0.0,
                   )->pd.DataFrame:
+
+    """fit tls model"""
 
     mod = sm.OLS(Y.values,x.values)
     res = mod.fit_regularized(L1_wt = 0,
