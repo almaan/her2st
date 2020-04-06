@@ -1,0 +1,4 @@
+The labeled_spots.tsv files contains spot coordinates as well as 
+the label specified by the pathologist (see annotated images).
+
+The labels were extracted using the annotated HE images.

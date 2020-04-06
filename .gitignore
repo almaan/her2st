@@ -1,3 +1,6 @@
 *.bak
 .mypy_cache
 .Rhistory
+**/.DS_Store
+scripts/Seurat_analysis_HER2_BC_samples.Rmd
+data/clinical-data
