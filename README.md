@@ -10,7 +10,7 @@ All data, results and code related to the paper _Spatial Deconvolution of HER2 p
     * `ST-imgs/` : contains the associated HE-images for the 36 sections used in this study
     * `ST-spotfiles/` : contains tables with selected spots under tissue used to subset the raw gene count matrices
     * `go-sets/` : GO gene sets. Named go-{GO-ID}.tsv
-    * `public.yaml` : markdown file with links to the publicly available data sets that we've used
+    * `public.yaml` : yaml file with links to the publicly available data sets that we've used
 * `res/`
     * `ST-pat/`
         * `img/` : images showing the pathologist's annotations
