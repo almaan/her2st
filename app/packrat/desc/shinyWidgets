@@ -1,0 +1,72 @@
+Package: shinyWidgets
+Title: Custom Inputs Widgets for Shiny
+Version: 0.4.9
+Authors@R: c(
+  person("Victor", "Perrier", email = "victor.perrier@dreamrs.fr", role = c("aut", "cre")),
+  person("Fanny", "Meyer", email = "fanny.meyer@dreamrs.fr", role = "aut"),
+  person("David", "Granjon", email = "david.granjon@uzh.ch", role = "aut"),
+  person("Ian", "Fellows", role = "ctb", comment = "Methods for mutating vertical tabs & updateMultiInput"),
+  person("Wil", "Davis", role = "ctb", comment = "numericRangeInput function"),
+  person("SnapAppointments", "", role = "cph", comment = "bootstrap-select"),
+  person("Mattia", "Larentis", role = c("ctb", "cph"), comment = "Bootstrap Switch"),
+  person("Emanuele", "Marchi", role = c("ctb", "cph"), comment = "Bootstrap Switch"),
+  person("Mark", "Otto", role = "ctb", comment = "Bootstrap library"),
+  person("Jacob", "Thornton", role = "ctb", comment = "Bootstrap library"),
+  person(family = "Bootstrap contributors", role = "ctb", comment = "Bootstrap library"),
+  person(family = "Twitter, Inc", role = "cph", comment = "Bootstrap library"),
+  person(family = "Flatlogic", role = "cph", comment = "Awesome Bootstrap Checkbox"),
+  person("mouse0270", role = c("ctb", "cph"), comment = "Material Design Switch"),
+  person("Tristan", "Edwards", role = c("ctb", "cph"), comment = "SweetAlert"),
+  person("Fabian", "Lindfors", role = c("ctb", "cph"), comment = "multi.js"),
+  person("Anthony", "Terrien", role = c("ctb", "cph"), comment = "jQuery Knob"),
+  person("Daniel", "Eden", role = c("ctb", "cph"), comment = "animate.css"),
+  person("Ganapati", "V S", role = c("ctb", "cph"), comment = "bttn.css"),
+  person("Brian", "Grinstead", role = c("ctb", "cph"), comment = "Spectrum"),
+  person("Lokesh", "Rajendran", role = c("ctb", "cph"), comment = "pretty-checkbox"),
+  person("Leon", "Gersen", role = c("ctb", "cph"), comment = "wnumb & noUiSlider"),
+  person("Timofey", "Marochkin", role = c("ctb", "cph"), comment = "air-datepicker"),
+  person("Tobias", "Ahlin", role = c("ctb", "cph"), comment = "CSS spin")
+  )
+Description: Collection of custom input controls and user interface components for 'Shiny' applications. 
+  Give your applications a unique and colorful style !
+URL: https://github.com/dreamRs/shinyWidgets
+BugReports: https://github.com/dreamRs/shinyWidgets/issues
+Depends: R (>= 3.1.0)
+Imports: shiny (>= 0.14), htmltools, jsonlite, grDevices, scales
+License: GPL-3 | file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1
+Suggests: shinydashboard, viridisLite, RColorBrewer, testthat, covr,
+        shinydashboardPlus, bs4Dash, argonR, argonDash, tablerDash
+NeedsCompilation: no
+Packaged: 2019-09-10 16:05:59 UTC; perri
+Author: Victor Perrier [aut, cre],
+  Fanny Meyer [aut],
+  David Granjon [aut],
+  Ian Fellows [ctb] (Methods for mutating vertical tabs &
+    updateMultiInput),
+  Wil Davis [ctb] (numericRangeInput function),
+  SnapAppointments [cph] (bootstrap-select),
+  Mattia Larentis [ctb, cph] (Bootstrap Switch),
+  Emanuele Marchi [ctb, cph] (Bootstrap Switch),
+  Mark Otto [ctb] (Bootstrap library),
+  Jacob Thornton [ctb] (Bootstrap library),
+  Bootstrap contributors [ctb] (Bootstrap library),
+  Twitter, Inc [cph] (Bootstrap library),
+  Flatlogic [cph] (Awesome Bootstrap Checkbox),
+  mouse0270 [ctb, cph] (Material Design Switch),
+  Tristan Edwards [ctb, cph] (SweetAlert),
+  Fabian Lindfors [ctb, cph] (multi.js),
+  Anthony Terrien [ctb, cph] (jQuery Knob),
+  Daniel Eden [ctb, cph] (animate.css),
+  Ganapati V S [ctb, cph] (bttn.css),
+  Brian Grinstead [ctb, cph] (Spectrum),
+  Lokesh Rajendran [ctb, cph] (pretty-checkbox),
+  Leon Gersen [ctb, cph] (wnumb & noUiSlider),
+  Timofey Marochkin [ctb, cph] (air-datepicker),
+  Tobias Ahlin [ctb, cph] (CSS spin)
+Maintainer: Victor Perrier <victor.perrier@dreamrs.fr>
+Repository: CRAN
+Date/Publication: 2019-09-10 16:40:05 UTC
+Built: R 3.6.0; ; 2019-09-11 12:17:20 UTC; unix
