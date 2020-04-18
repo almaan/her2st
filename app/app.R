@@ -13,7 +13,7 @@ library(shinyWidgets)
 
 # initiate a ggplot theme for use in plotting
 # (just getting rid of everything so we only see the image itself)
-theme_empty <- theme_bw()
+theme_empty <- theme_bw() 
 theme_empty$line <- element_blank()
 theme_empty$rect <- element_blank()
 theme_empty$strip.text <- element_blank()
@@ -21,9 +21,12 @@ theme_empty$axis.text <- element_blank()
 theme_empty$plot.title <- element_text(colour = "white", size = 20, hjust = 0, margin = margin(t = 10, b = -20)) #element_blank()
 theme_empty$axis.title <- element_blank()
 theme_empty$legend.position <- c(0.97, 0.5)
-theme_empty$legend.background <- element_rect(fill = "darkgrey", colour = "white")
+theme_empty$legend.background <- element_rect(fill = "transparent", colour = "transparent")
 theme_empty$legend.text <- element_text(colour = "white")
 theme_empty$legend.title <- element_text(colour = "white")
+theme_empty$legend.key.size <- unit(10,"mm")
+theme_empty$legend.margin <- margin(10,50,10,50) 
+
 
 colorscales <- list("Blues" = RColorBrewer::brewer.pal(n = 9, name = "Blues"),
                     "GrRd" = c("lightgray", "mistyrose", "red", "dark red"),
