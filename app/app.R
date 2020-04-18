@@ -39,7 +39,13 @@ edgecolors <- list("On" = "black",
                    "Off" = "none")
 
 numsections <- list("A"=1:6,
-                    "B" = 1:4)
+                    "B" = 1:4,
+                    "C" = 1:6,
+                    "D" = 1:6,
+                    "E" = 1:3,
+                    "F" = 1:3,
+                    "G" = 1:3,
+                    "H" = 1:3)
 
 LS <- LETTERS[1:8]
 
@@ -208,6 +214,7 @@ ui <- dashboardPage(
 
   body = dashboardBody(
 
+
     tags$head(tags$style(HTML('
                                 /* logo */
                                 .skin-blue .main-header .logo {
@@ -226,7 +233,7 @@ ui <- dashboardPage(
 
                                 /* main sidebar */
                                 .skin-blue .main-sidebar {
-                                background-color: #101010;
+                                background-color: #333333;
                                 }
 
                                 /* active selected tab in the sidebarmenu */
@@ -242,7 +249,8 @@ ui <- dashboardPage(
 
                                 /* body */
                                 .content-wrapper, .right-side {
-                                background-color: #0000;
+                                background-color: #000000;
+
                                 }
 
                                 '))),
@@ -420,174 +428,35 @@ server <- function(input, output, session) {
 
 
   # re-render the plot with the new data -------------------------
-  lapply(1:6, function(i) {
-    output[[paste0("Aplot", i)]] <- renderPlot({
-      c(dt, dims, dfs, variable) %<-% get_data()
+  lapply(LS,function(P){
+    lapply(1:6, function(i) {
+      output[[paste0(P,"plot", i)]] <- renderPlot({
+        c(dt, dims, dfs, variable) %<-% get_data()
 
-      ggplot() +
-        geom_point(data = subset(dt, sample == paste0(i)),
-                   mapping = aes_string(x = "warped_x",
-                                        y = paste0("dims[[", i, "]][2] - warped_y"),
-                                        fill = paste0("`", variable, "`")
-                                        ),
-                   color = edgecolors[[input$edgecolor]],
-                   ## color = "red",
-                   size = session$clientData$output_Aplot1_width/150,
-                   alpha = input$alpha,
-                   shape = 21) +
-        theme_empty +
-        labs(title = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), paste0("Cell type: ", variable), paste0("Gene: ", variable)), fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), "cell type \nproportion", "norm. gene \nexpression")) +
-        scale_x_continuous(limits = c(0, dims[[i]][1]), expand = c(0, 0)) +
-        scale_y_continuous(limits = c(0, dims[[i]][2]), expand = c(0, 0)) +
-        scale_fill_gradientn(colours = colorscales[[input$cscale]])
+        ggplot() +
+          geom_point(data = subset(dt, sample == paste0(i)),
+                    mapping = aes_string(x = "warped_x",
+                                          y = paste0("dims[[", i, "]][2] - warped_y"),
+                                          fill = paste0("`", variable, "`")
+                                          ),
+                    color = edgecolors[[input$edgecolor]],
+                    size = session$clientData$output_Aplot1_width/150,
+                    alpha = input$alpha,
+                    shape = 21) +
+          theme_empty +
+          labs(title = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), paste0("Cell type: ", variable),
+                              paste0("Gene: ", variable)),
+              fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"),
+                            "cell type \nproportion",
+                            "norm. gene \nexpression")) +
+          scale_x_continuous(limits = c(0, dims[[i]][1]), expand = c(0, 0)) +
+          scale_y_continuous(limits = c(0, dims[[i]][2]), expand = c(0, 0)) +
+          scale_fill_gradientn(colours = colorscales[[input$cscale]])
 
-    },
-    bg = "transparent")
-  })
-
-  # re-render the plot with the new data -------------------------
-  lapply(1:6, function(i) {
-    output[[paste0("Bplot", i)]] <- renderPlot({
-
-      c(dt, dims, dfs, variable) %<-% get_data()
-
-      ggplot() +
-        geom_point(data = subset(dt, sample == paste0(i)),
-                   mapping = aes_string(x = "warped_x", y = paste0("dims[[", i, "]][2] - warped_y"), fill = paste0("`", variable, "`")),
-                   size = session$clientData$output_Aplot1_width/150, alpha = input$alpha, shape = 21) +
-        theme_empty +
-        labs(title = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), paste0("Cell type: ", variable), paste0("Gene: ", variable)), fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), "cell type \nproportion", "norm. gene \nexpression")) +
-        scale_x_continuous(limits = c(0, dims[[i]][1]), expand = c(0, 0)) +
-        scale_y_continuous(limits = c(0, dims[[i]][2]), expand = c(0, 0)) +
-        scale_fill_gradientn(colours = colorscales[[input$cscale]])
-
-    },
-    bg = "transparent")
-  })
-
-  # re-render the plot with the new data -------------------------
-  lapply(1:6, function(i) {
-    output[[paste0("Cplot", i)]] <- renderPlot({
-
-      c(dt, dims, dfs, variable) %<-% get_data()
-
-      ggplot() +
-        geom_point(data = subset(dt, sample == paste0(i)),
-                   mapping = aes_string(x = "warped_x", y = paste0("dims[[", i, "]][2] - warped_y"), fill = paste0("`", variable, "`")),
-                   size = session$clientData$output_Aplot1_width/150, alpha = input$alpha, shape = 21) +
-        theme_empty +
-        labs(title = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), paste0("Cell type: ", variable), paste0("Gene: ", variable)), fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), "cell type \nproportion", "norm. gene \nexpression")) +
-        scale_x_continuous(limits = c(0, dims[[i]][1]), expand = c(0, 0)) +
-        scale_y_continuous(limits = c(0, dims[[i]][2]), expand = c(0, 0)) +
-        scale_fill_gradientn(colours = colorscales[[input$cscale]])
-
-    },
-    bg = "transparent")
-  })
-
-  # re-render the plot with the new data -------------------------
-  lapply(1:6, function(i) {
-    output[[paste0("Dplot", i)]] <- renderPlot({
-
-      c(dt, dims, dfs, variable) %<-% get_data()
-
-      ggplot() +
-        geom_point(data = subset(dt, sample == paste0(i)),
-                   mapping = aes_string(x = "warped_x", y = paste0("dims[[", i, "]][2] - warped_y"), fill = paste0("`", variable, "`")),
-                   size = session$clientData$output_Aplot1_width/150, alpha = input$alpha, shape = 21) +
-        theme_empty +
-        labs(title = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), paste0("Cell type: ", variable), paste0("Gene: ", variable)), fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), "cell type \nproportion", "norm. gene \nexpression")) +
-        scale_x_continuous(limits = c(0, dims[[i]][1]), expand = c(0, 0)) +
-        scale_y_continuous(limits = c(0, dims[[i]][2]), expand = c(0, 0)) +
-        scale_fill_gradientn(colours = colorscales[[input$cscale]])
-
-    },
-    bg = "transparent")
-  })
-
-  # re-render the plot with the new data -------------------------
-  lapply(1:3, function(i) {
-    output[[paste0("Eplot", i)]] <- renderPlot({
-
-      c(dt, dims, dfs, variable) %<-% get_data()
-
-      ggplot() +
-        geom_point(data = subset(dt, sample == paste0(i)),
-                   mapping = aes_string(x = "warped_x", y = paste0("dims[[", i, "]][2] - warped_y"), fill = paste0("`", variable, "`")),
-                   size = session$clientData$output_Aplot1_width/150, alpha = input$alpha, shape = 21) +
-        theme_empty +
-        labs(title = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), paste0("Cell type: ", variable), paste0("Gene: ", variable)), fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), "cell type \nproportion", "norm. gene \nexpression")) +
-        scale_x_continuous(limits = c(0, dims[[i]][1]), expand = c(0, 0)) +
-        scale_y_continuous(limits = c(0, dims[[i]][2]), expand = c(0, 0)) +
-        scale_fill_gradientn(colours = colorscales[[input$cscale]])
-
-    },
-    bg = "transparent")
-  })
-
-  # re-render the plot with the new data -------------------------
-  lapply(1:3, function(i) {
-    output[[paste0("Fplot", i)]] <- renderPlot({
-
-      c(dt, dims, dfs, variable) %<-% get_data()
-
-      ggplot() +
-        geom_point(data = subset(dt, sample == paste0(i)),
-                   mapping = aes_string(x = "warped_x", y = paste0("dims[[", i, "]][2] - warped_y"), fill = paste0("`", variable, "`")),
-                   size = session$clientData$output_Aplot1_width/150, alpha = input$alpha, shape = 21) +
-        theme_empty +
-        labs(title = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), paste0("Cell type: ", variable), paste0("Gene: ", variable)), fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), "cell type \nproportion", "norm. gene \nexpression")) +
-        scale_x_continuous(limits = c(0, dims[[i]][1]), expand = c(0, 0)) +
-        scale_y_continuous(limits = c(0, dims[[i]][2]), expand = c(0, 0)) +
-        scale_fill_gradientn(colours = colorscales[[input$cscale]])
-
-    },
-    bg = "transparent")
-  })
-
-  # re-render the plot with the new data -------------------------
-  lapply(1:3, function(i) {
-    output[[paste0("Gplot", i)]] <- renderPlot({
-
-      c(dt, dims, dfs, variable) %<-% get_data()
-
-      ggplot() +
-        geom_point(data = subset(dt, sample == paste0(i)),
-                   mapping = aes_string(x = "warped_x", y = paste0("dims[[", i, "]][2] - warped_y"), fill = paste0("`", variable, "`")),
-                   size = session$clientData$output_Aplot1_width/150, alpha = input$alpha, shape = 21) +
-        theme_empty +
-        labs(title = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), paste0("Cell type: ", variable), paste0("Gene: ", variable)), fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), "cell type \nproportion", "norm. gene \nexpression")) +
-        scale_x_continuous(limits = c(0, dims[[i]][1]), expand = c(0, 0)) +
-        scale_y_continuous(limits = c(0, dims[[i]][2]), expand = c(0, 0)) +
-        scale_fill_gradientn(colours = colorscales[[input$cscale]])
-
-    },
-    bg = "transparent")
-  })
-
-  # re-render the plot with the new data -------------------------
-  lapply(1:3, function(i) {
-    output[[paste0("Hplot", i)]] <- renderPlot({
-
-      c(dt, dims, dfs, variable) %<-% get_data()
-
-      sb <- subset(dt, sample == paste0(i))
-
-      ggplot() +
-        geom_point(data = subset(dt, sample == paste0(i)),
-                   mapping = aes_string(x = "warped_x", y = paste0("dims[[", i, "]][2] - warped_y"), fill = paste0("`", variable, "`")),
-                   size = session$clientData$output_Aplot1_width/150, alpha = input$alpha, shape = 21) +
-        theme_empty +
-        labs(title = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), paste0("Cell type: ", variable), paste0("Gene: ", variable)), fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), "cell type \nproportion", "norm. gene \nexpression")) +
-        scale_x_continuous(limits = c(0, dims[[i]][1]), expand = c(0, 0)) +
-        scale_y_continuous(limits = c(0, dims[[i]][2]), expand = c(0, 0)) +
-        scale_fill_gradientn(colours = colorscales[[input$cscale]])
-
-    },
-    bg = "transparent")
-  })
-
-
+      },
+      bg = "transparent")
+    })
+    })
 }
 
 # Run the application
