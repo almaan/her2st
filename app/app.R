@@ -25,7 +25,7 @@ theme_empty$legend.background <- element_rect(fill = "darkgrey", colour = "white
 theme_empty$legend.text <- element_text(colour = "white")
 theme_empty$legend.title <- element_text(colour = "white")
 
-colorscales <- list("heat" = c("dark blue", "cyan", "yellow", "red", "dark red"),
+colorscales <- list("Blues" = RColorBrewer::brewer.pal(n = 9, name = "Blues"),
                     "GrRd" = c("lightgray", "mistyrose", "red", "dark red"),
                     "RdBuYl" = rev(RColorBrewer::brewer.pal(n = 9, name = "RdYlBu")),
                     "Spectral" = rev(RColorBrewer::brewer.pal(n = 11, name = "Spectral")),
@@ -34,6 +34,12 @@ colorscales <- list("heat" = c("dark blue", "cyan", "yellow", "red", "dark red")
                     "Blues" = RColorBrewer::brewer.pal(n = 9, name = "Blues"),
                     "Reds" = RColorBrewer::brewer.pal(n = 9, name = "Reds"),
                     "Greens" = RColorBrewer::brewer.pal(n = 9, name = "Greens"))
+
+edgecolors <- list("On" = "black",
+                   "Off" = "none")
+
+numsections <- list("A"=1:6,
+                    "B" = 1:4)
 
 LS <- LETTERS[1:8]
 
@@ -78,6 +84,21 @@ ui <- dashboardPage(
 
   header = dashboardHeader(title = "HER2+ BC"),
 
+  ## sidebar = dashboardSidebar(
+    ## width = 350,
+
+    ## column(width = 12,
+    ##        sidebarMenu(selectInput("patient",
+    ##                    "Patient: ",
+    ##                    c("Patient A" = "A",
+    ##                      "Patient B" = "B")))),
+    ## column(width = 12,
+    ##        selectInput("tabs1",
+    ##                    "Section: ",
+    ##                                c("Section 1" = "A_section_1",
+    ##                                  "Section 2" = "A_section_2")
+    ##                                )),
+
   sidebar = dashboardSidebar(
     width = 350,
 
@@ -85,7 +106,9 @@ ui <- dashboardPage(
       sidebarMenu(
         id = "tabs1",
         do.call(dropdownButton, c(lapply(1:6, function(i) {
-          menuItem(paste0("Section ", i), tabName = paste0("A_section_", i), icon = icon("angle-double-right"))
+          menuItem(paste0("Section ", i),
+                   tabName = paste0("A_section_", i),
+                   icon = icon("angle-double-right"))
         }), status = "default", circle = FALSE, size = "sm", label = "Patient A"))
       )
     ),
@@ -146,7 +169,6 @@ ui <- dashboardPage(
       )
     ),
 
-
     column(width = 12,
            uiOutput("var_features"),
            selectInput(
@@ -173,7 +195,13 @@ ui <- dashboardPage(
              inputId = "cscale",
              label = "colors",
              choices = names(colorscales),
-             selected = "Spectral")
+             selected = "Spectral"),
+           radioButtons(
+             inputId = "edgecolor",
+             label = "edgecolor",
+             choices = names(edgecolors),
+             selected = "On")
+
     )
 
   ),
@@ -229,6 +257,20 @@ ui <- dashboardPage(
 ### SERVER ####
 server <- function(input, output, session) {
 
+
+  ## observe({
+  ##   s_options <- sapply(numsections[[input$patient]], function(x){paste0(input$patient,"_section_",x)})
+  ##   names(s_options) <- as.character(sapply(numsections[[input$patient]],
+  ##                                           function(x){paste0("Section ",x)}))
+  ## print(s_options)
+
+  ## updateSelectInput(session,
+  ##                   "tabs1",
+  ##                   choices = s_options,
+  ##                   ## selected = names(s_options)[1],
+  ##                   )
+  ##   })
+
   rv <- reactiveValues(lastBtn = character())
   observeEvent(input$var, {
     if (input$var > 0 ) {
@@ -252,6 +294,8 @@ server <- function(input, output, session) {
   })
 
   output$STplot <- renderUI({
+
+      print(str(tags))
 
       ls.A <- append(list(
         # Create active tab
@@ -352,6 +396,7 @@ server <- function(input, output, session) {
 
   get_data <- reactive({
     index <- match(substr(input$tabs1, 1, 1), LS)
+    print(index)
     c(gc_data, data) %<-% data.list[[index]]
 
     if (rv$lastBtn == "t1") {
@@ -381,8 +426,15 @@ server <- function(input, output, session) {
 
       ggplot() +
         geom_point(data = subset(dt, sample == paste0(i)),
-                   mapping = aes_string(x = "warped_x", y = paste0("dims[[", i, "]][2] - warped_y"), fill = paste0("`", variable, "`")),
-                   size = session$clientData$output_Aplot1_width/150, alpha = input$alpha, shape = 21) +
+                   mapping = aes_string(x = "warped_x",
+                                        y = paste0("dims[[", i, "]][2] - warped_y"),
+                                        fill = paste0("`", variable, "`")
+                                        ),
+                   color = edgecolors[[input$edgecolor]],
+                   ## color = "red",
+                   size = session$clientData$output_Aplot1_width/150,
+                   alpha = input$alpha,
+                   shape = 21) +
         theme_empty +
         labs(title = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), paste0("Cell type: ", variable), paste0("Gene: ", variable)), fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), "cell type \nproportion", "norm. gene \nexpression")) +
         scale_x_continuous(limits = c(0, dims[[i]][1]), expand = c(0, 0)) +
