@@ -38,8 +38,10 @@ colorscales <- list("Blues" = RColorBrewer::brewer.pal(n = 9, name = "Blues"),
                     "Reds" = RColorBrewer::brewer.pal(n = 9, name = "Reds"),
                     "Greens" = RColorBrewer::brewer.pal(n = 9, name = "Greens"))
 
-edgecolors <- list("On" = "black",
-                   "Off" = "none")
+#edgecolors <- list("On" = "black",
+#                   "Off" = "#00000000")
+edgestrokes <- list("On" = 0.5,
+                   "Off" = 0)
 
 numsections <- list("A"=1:6,
                     "B" = 1:4,
@@ -208,7 +210,7 @@ ui <- dashboardPage(
            radioButtons(
              inputId = "edgecolor",
              label = "edgecolor",
-             choices = names(edgecolors),
+             choices = names(edgestrokes),
              selected = "On")
 
     )
@@ -407,7 +409,6 @@ server <- function(input, output, session) {
 
   get_data <- reactive({
     index <- match(substr(input$tabs1, 1, 1), LS)
-    print(index)
     c(gc_data, data) %<-% data.list[[index]]
 
     if (rv$lastBtn == "t1") {
@@ -442,7 +443,8 @@ server <- function(input, output, session) {
                                           y = paste0("dims[[", i, "]][2] - warped_y"),
                                           fill = paste0("`", variable, "`")
                                           ),
-                    color = edgecolors[[input$edgecolor]],
+                    #color = edgecolors[[input$edgecolor]],
+                    stroke = edgestrokes[[input$edgecolor]],
                     size = session$clientData$output_Aplot1_width/150,
                     alpha = input$alpha,
                     shape = 21) +
