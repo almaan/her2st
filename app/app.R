@@ -22,8 +22,6 @@ N.PATIENTS <- length(PATIENTS)
 
 theme_empty <- make_empty_theme()
 
-
-
 dims.list <- readRDS("data/dims.list")
 imdims.list <- readRDS("data/imdims.list")
 var.features.list <- readRDS("data/var.features.list")
@@ -101,7 +99,7 @@ ui <- dashboardPage(
            radioButtons(
              inputId = "edgecolor",
              label = "edgecolor",
-             choices = names(EDGECOLORS),
+             choices = names(EDGESTROKES),
              selected = "On")
 
     )
