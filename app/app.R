@@ -244,7 +244,7 @@ server <- function(input, output, session) {
                                          y = paste0("dims[[", i, "]][2] - warped_y"),
                                          fill = paste0("`", variable, "`")
                                          ),
-                    color = EDGECOLORS[[input$edgecolor]],
+                    color = EDGESTROKES[[input$edgecolor]],
                     size = session$clientData$output_Aplot1_width/150,
                     alpha = input$alpha,
                     shape = 21) +

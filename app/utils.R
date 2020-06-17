@@ -36,9 +36,7 @@ COLORS <- list("Greens" = RColorBrewer::brewer.pal(n = 9, name = "Greens"),
                "Reds" = RColorBrewer::brewer.pal(n = 9, name = "Reds")
                )
 
-EDGECOLORS <- list("On" = "black",
-                   "Off" = "none")
-
-
+EDGESTROKES <- list("On" = 0.5,
+                   "Off" = 0.0)
 
 
