@@ -1,0 +1,806 @@
+---
+title: "MultiCCA_on_samples_ABCDEGHJ_Seurat_v3.1.1"
+author: "Ludvig Larsson"
+date: "9/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+<br>
+
+# Analysis of BC tumors
+***
+
+<br>
+```{r setup_env}
+
+suppressPackageStartupMessages({
+  library(Seurat)
+  library(data.table)
+  library(ggplot2)
+  library(plotly)
+  library(STutility)
+  library(zeallot)
+})
+setwd("~/her2st/scripts/")
+
+```
+<br>
+
+## Organize data
+***
+
+We have 8 patient datasets named A, B, C, D, E, F, G and H.
+
+Datasets 1-4 consist of 6 semi-consecutive tissue sections, wehereas the remaining 4 datasets consist of 3 semi-consecutive tissue sections (semi-consecutive = every third section). 
+
+First, set up a meta.data table for the project. We have some limited patient data for patients A-J that we can include providing ER and PgR status. In addition, we need the paths to; gene count matrices, HE images and spot selection files.
+
+<br>
+```{r create_infoTable}
+
+library(openxlsx)
+
+meta_data <- read.xlsx("../data/clinical-data/10_HER2+_info.xlsx")
+rownames(meta_data) <- meta_data$Sample
+samples <- list.files(pattern = ".tsv", path = "../data/ST-cnts/", full.names = T)
+names(samples) <- substr(do.call(rbind, strsplit(samples, split = "/"))[, 5], start = 1, stop = 2)
+imgs <- list.files(path = "../data/ST-imgs/", recursive = T, full.names = T, pattern = ".jpg")
+names(imgs) <- do.call(rbind, strsplit(imgs, split = "/"))[, 6]
+ids <- names(samples)
+infoTable <- data.frame(samples, imgs = imgs[ids], ids, patient_id = substr(x = ids, start = 1, stop = 1), stringsAsFactors = FALSE)
+infoTable <- cbind(infoTable, meta_data[infoTable$patient_id, ])
+infoTable[, 8:ncol(infoTable)]
+
+```
+<br>
+
+Subset infoTable to include specified datasets.
+
+<br>
+```{r subset}
+
+infoTable$spotfiles <- list.files(path = "../data/ST-spotfiles", full.names = T)[1:36]
+head(infoTable)
+
+```
+<br>
+
+## Load data
+***
+
+Load all patient datasets and merge into one Seurat object per patient. Each gene has to bre present in at least 20 spots per sample and each spot has to have at least 300 unique features (genes).
+
+<br>
+```{r cca_list}
+
+seu.list <- lapply(unique(infoTable$patient_id), function(s) {
+    InputFromTable(infotable = subset(infoTable, patient_id == s), 
+                      min.gene.spots = 20,
+                      min.spot.feature.count = 300,
+                      platform = "1k")
+}) 
+
+```
+<br>
+
+Calculate some QC metrics
+
+<br>
+```{r all_samples_stats}
+
+total.qc <- do.call(rbind, lapply(seu.list, function(se) {
+  data.frame(total_UMIs = sum(se@assays$RNA@counts), nSpots = ncol(se))
+}))
+
+sum(total.qc$nSpots)
+
+```
+<br>
+
+Plot total number of unique features per spot and sample for each patient dataset (3D samples)
+
+<br>
+```{r UMIs_per_sample, fig.width=9, fig.height=9}
+
+for (seu in seu.list[1:4]) {
+    seu <- SetIdent(seu, value = "ids")
+    p1 <- VlnPlot(seu, features = "nFeature_RNA")
+    p2 <- ST.FeaturePlot(seu, features = "nFeature_RNA", palette = "GrRd")
+    plot(cowplot::plot_grid(p1, p2, ncol = 1, rel_heights = c(1, 2)))
+}
+
+```
+<br>
+
+Plot total number of unique features per spot and sample for each patient dataset (remaining samples)
+
+<br>
+```{r UMIs_per_sample, fig.width=9, fig.height=6}
+
+for (seu in seu.list[5:8]) {
+    seu <- SetIdent(seu, value = "ids")
+    p1 <- VlnPlot(seu, features = "nFeature_RNA")
+    p2 <- ST.FeaturePlot(seu, features = "nFeature_RNA", palette = "GrRd")
+    plot(cowplot::plot_grid(p1, p2, ncol = 1, rel_heights = c(1, 1)))
+}
+
+```
+<br>
+
+We will also create a separate seurat object including all the samples to show the inter-heterogeneity across the samples.
+
+<br>
+```{r all_samples_se}
+
+seu <- InputFromTable(infotable = infoTable, 
+                      min.gene.spots = 50,
+                      min.spot.feature.count = 300, 
+                      platform = "1k")
+
+seu <- seu %>% SCTransform() %>%
+  RunPCA()
+
+```
+<br>
+
+Run UMAP and color spots by patient to viusalize the global differences between patients. 
+
+<br>
+```{r UMAP_all}
+
+seu <- RunUMAP(seu, reduction = "pca", dims = 1:20)
+
+seu <- SetIdent(seu, value = "patient_id")
+DimPlot(seu)
+
+```
+<br>
+
+### QC 
+***
+
+Compute qc stats for a supplementary table. The stats should describe a feature of a section dataset, e.g. average number of UMIs. The qc stats included are:
+
+    1. average number of UMIs: "avg.nUMI"
+    2. median number of UMIs: "median.nUMI"
+    3. minimum number of UMIs: "max.UMI"
+    4. maximum number of UMIs: "max.UMI"
+    5. average number of unique genes: "avg.nGene"
+    6. median number of unique genes: "median.nGene"
+    7. minimum number of unique genes: "max.nGene"
+    8. maximum number of unique genes: "max.nGene"
+    9. total number of spots: "nSpots"
+    
+<br>
+```{r QC}
+
+qcMat <- do.call(rbind, lapply(1:length(seu.list), function(i) {
+    seu <- seu.list[[i]]
+    do.call(rbind, lapply(unique(seu[["ids", drop = T]]), function(id) {
+        repMat <- seu@assays$RNA@counts[, seu[["ids", drop = T]] == id]
+        nUMI <- Matrix::colSums(repMat)
+        nGene <- apply(repMat, 2, function(x) sum(x > 0))
+        data.frame(sample = id, 
+                   avg.nUMI = round(mean(nUMI)),
+                   median.nUMI = median(nUMI),
+                   max.nUMI = max(nUMI),
+                   min.nUMI = min(nUMI),
+                   avg.nGene = round(mean(nGene)),
+                   median.nGene = median(nGene),
+                   min.nGene = min(nGene),
+                   max.nGene = max(nGene),
+                   nSpots = ncol(repMat))
+    }))
+}))
+
+qcMat
+
+```
+<br>
+
+### Normalization
+
+Transform raw counts using Variance Stabilizing Transformation (VST) described in the [SCTransform](https://rawgit.com/ChristophH/sctransform/master/inst/doc/variance_stabilizing_transformation.html) R package. Here we set `return.only.var.genes = FALSE` 
+and `variable.features.n = NULL` to return the residual variance for all genes and setting the residual variance threshold to 1.1 to limit the set of most variable genes.
+<br>
+```{r SCTransform, warning=FALSE}
+
+seu.list <- lapply(seu.list, function(seu) {
+  SCTransform(seu, 
+              vars.to.regress = c("ids"), 
+              return.only.var.genes = FALSE, 
+              variable.features.n = NULL, 
+              variable.features.rv.th = 1.1)
+})
+
+```
+
+<br>
+
+## Load images
+***
+
+Load images into a low resolution representation with a width of 400 pixels. This will allow us to overlay expression features on the HE images.
+
+<br>
+```{r load_images}
+
+seu.list <- lapply(seu.list, function(seu) {
+  seu %>% LoadImages(verbose = T, time.resolve = F)
+})
+
+```
+<br>
+
+### Find genes with spatial structure
+***
+
+To find genes with high spatial autocorrelation we can run the `CorSpatialGenes`. The test is computed on all variable genes determined by `SCTransform` and the returned output is a data.frame with genes ranked by degreee of spatial autocorrelation in descending order.
+
+<br>
+```{r spatgenes, warning=FALSE}
+
+library(spdep)
+
+spatgenes.list <- lapply(seu.list, function(seu) {
+  CorSpatialGenes(seu)
+})
+
+```
+<br>
+
+### Ring genes
+
+We identified 21 genes associated with a ring pattern observed in multiple samples. Below are a few examples illustrating the effect. Because these patterns were not consistent between the semi-consecutive sections we concluded that the tissue expression of these genes must be confounded by some technical effects. 
+
+<br>
+```{r ring_pattern_genes, fig.height=16, fig.width=14}
+
+ring.genes <- c("FTH1", "EEF2", "BEST1", "LRRC59", "PRDX1", "CD63", "DYNC1H1", "ENO1",
+                "PSMB3", "RNF187", "RNASE1", "CFL1", "GRN", "UBC", "TAX1BP3", "COX4I1",
+                "CUTA", "NME1", "H3F3B", "AKR7A2", "IMPDH2")
+
+p1 <- ST.FeaturePlot(seu.list[[5]], ring.genes[1:6], palette = "RdBu", grid.ncol = 2, pt.size = 1.5, slot = "scale.data", center.zero = T, show.sb = F)
+p2 <- ST.FeaturePlot(seu.list[[6]], ring.genes[1:6], palette = "RdBu", grid.ncol = 2, pt.size = 1.5, slot = "scale.data", center.zero = T, show.sb = F)
+cowplot::plot_grid(p1, p2, ncol = 1, labels = c("Patient E", "Patient F"))
+
+```
+<br>
+
+### Dimensionality reduction
+***
+
+For the dimensionality reduction step, we'll use a Non Negative Matrix Factorization method. This method will make sure that returned vectors have positive values and are thus easier to interpret than e.g. PCA results. The genes used for the coputation is a subset of all genes including the highly variable genes as determined by SCTransform except the "ring genes" and genes with a correlation score below or equal to 0.1 (see `CorSpatialGenes` above).
+
+<br>
+```{r NMF}
+
+seu.list <- lapply(seq_along(seu.list), function(i) {
+  seu <- seu.list[[i]]
+  keep.genes <- intersect(setdiff(seu@assays$SCT@var.features, ring.genes), spatgenes.list[[i]]$gene[spatgenes.list[[i]]$cor > 0.1])
+  seu <- RunNMF(seu, features = keep.genes, nfactors = 10, n.cores = 7, order.by.spcor = TRUE, sort.spcor.by.var = TRUE)
+  return(seu)
+})
+
+```
+<br>
+
+Now that we have NMF output for each of the 8 seurat objects, we can visualze the spatial distribution of these factors and decide which ones to keep for downstream analysis.
+
+### Plot dimred
+
+<br>
+```{r A_1-10_NMF_spatial, fig.height=16, fig.width=8}
+
+ST.DimPlot(seu.list[[1]], 
+           dims = 1:10, 
+           reduction = "NMF", 
+           dark.theme = T, 
+           pt.size = 0.5,
+           ncol = 6, 
+           grid.ncol = 1, 
+           cols = c("black", "dark blue", "cyan", "yellow", "red", "dark red"), 
+           center.zero = F)
+
+```
+<br>
+
+Some of these factors appear to be very inconsistent across tissue sections. Since the tissue sections are ordered by sectioning depth, these patterns are unexpected and are probably symptomatic of some technical artefacts in the data. However, now that we can visualize these effects in relation to the tissue we can select a subset of those the factors that show consistency across sections. 
+
+We can also plot a heatmap to show the top contributing genes for each factor. 
+
+<br>
+```{r A_factor_heatmap, fig.height=6, fig.width=8}
+
+c(df1, df2) %<-% SummarizeAssocFeatures(seu.list[[1]], features.return = 6)
+swne::ggHeat(df2) + theme(axis.text.y = element_text(size = 6))
+
+selected.dims <- list()
+selected.dims[["A"]] <- c(1:6) 
+
+```
+
+```{r B_1-10_NMF_spatial, fig.height=16, fig.width=8}
+
+ST.DimPlot(seu.list[[2]], 
+           dims = 1:10, 
+           reduction = "NMF", 
+           dark.theme = T, 
+           pt.size = 0.5,
+           ncol = 6, 
+           grid.ncol = 1, 
+           cols = c("black", "dark blue", "cyan", "yellow", "red", "dark red"), 
+           center.zero = F)
+
+```
+
+
+```{r B_factor_heatmap, fig.height=6, fig.width=8}
+
+c(df1, df2) %<-% SummarizeAssocFeatures(seu.list[[2]], features.return = 6)
+swne::ggHeat(df2) + theme(axis.text.y = element_text(size = 6))
+
+selected.dims[["B"]] <- c(1:6, 8)
+
+```
+
+```{r C_1-10_NMF_spatial, fig.height=16, fig.width=8}
+
+ST.DimPlot(seu.list[[3]], 
+           dims = 1:10, 
+           reduction = "NMF", 
+           dark.theme = T, 
+           pt.size = 0.5,
+           ncol = 6, 
+           grid.ncol = 1, 
+           cols = c("black", "dark blue", "cyan", "yellow", "red", "dark red"), 
+           center.zero = F)
+
+```
+
+```{r C_factor_heatmap, fig.height=6, fig.width=8}
+
+c(df1, df2) %<-% SummarizeAssocFeatures(seu.list[[3]], features.return = 6)
+swne::ggHeat(df2) + theme(axis.text.y = element_text(size = 6))
+
+selected.dims[["C"]] <- 1:10
+
+```
+
+```{r D_1-10_NMF_spatial, fig.height=16, fig.width=8}
+
+ST.DimPlot(seu.list[[4]], 
+           dims = 1:10, 
+           reduction = "NMF", 
+           dark.theme = T, 
+           pt.size = 0.5,
+           ncol = 6, 
+           grid.ncol = 1, 
+           cols = c("black", "dark blue", "cyan", "yellow", "red", "dark red"), 
+           center.zero = F)
+
+```
+
+
+```{r D_factor_heatmap, fig.height=6, fig.width=8}
+
+c(df1, df2) %<-% SummarizeAssocFeatures(seu.list[[4]], features.return = 3)
+swne::ggHeat(df2) + theme(axis.text.y = element_text(size = 6))
+
+selected.dims[["D"]] <- c(1:8)
+
+```
+
+```{r E_1-10_NMF_spatial, fig.height=16, fig.width=4}
+
+suppressWarnings({
+  ST.DimPlot(seu.list[[5]], 
+           dims = 1:10, 
+           reduction = "NMF", 
+           dark.theme = T, 
+           pt.size = 0.5,
+           ncol = 6, 
+           grid.ncol = 1, 
+           cols = c("black", "dark blue", "cyan", "yellow", "red", "dark red"), 
+           center.zero = F)
+})
+
+```
+
+```{r E_factor_heatmap, fig.height=6, fig.width=8}
+
+c(df1, df2) %<-% SummarizeAssocFeatures(seu.list[[5]], features.return = 3)
+swne::ggHeat(df2) + theme(axis.text.y = element_text(size = 6))
+
+selected.dims[["E"]] <- 1:10
+
+```
+
+```{r F_1-10_NMF_spatial, fig.height=16, fig.width=4}
+
+ST.DimPlot(seu.list[[6]], 
+           dims = 1:10, 
+           reduction = "NMF", 
+           dark.theme = T, 
+           pt.size = 0.5,
+           ncol = 6, 
+           grid.ncol = 1, 
+           cols = c("black", "dark blue", "cyan", "yellow", "red", "dark red"), 
+           center.zero = F)
+
+```
+
+```{r F_factor_heatmap, fig.height=6, fig.width=6}
+
+c(df1, df2) %<-% SummarizeAssocFeatures(seu.list[[6]], features.return = 3)
+swne::ggHeat(df2) + theme(axis.text.y = element_text(size = 6))
+
+selected.dims[["F"]] <- c(1:6)
+
+```
+
+```{r G_1-10_NMF_spatial, fig.height=16, fig.width=4}
+
+suppressWarnings({
+  ST.DimPlot(seu.list[[7]], 
+           dims = 1:10, 
+           reduction = "NMF", 
+           dark.theme = T, 
+           pt.size = 0.5,
+           ncol = 6, 
+           grid.ncol = 1, 
+           cols = c("black", "dark blue", "cyan", "yellow", "red", "dark red"), 
+           center.zero = F)
+})
+
+```
+
+
+```{r G_factor_heatmap, fig.height=6, fig.width=6}
+
+c(df1, df2) %<-% SummarizeAssocFeatures(seu.list[[7]], features.return = 3)
+swne::ggHeat(df2) + theme(axis.text.y = element_text(size = 6))
+
+selected.dims[["G"]] <- 1:10
+
+```
+
+```{r H_1-10_NMF_spatial, fig.height=16, fig.width=4}
+
+ST.DimPlot(seu.list[[8]], 
+           dims = 1:10, 
+           reduction = "NMF", 
+           dark.theme = T, 
+           pt.size = 0.5,
+           ncol = 6, 
+           grid.ncol = 1, 
+           cols = c("black", "dark blue", "cyan", "yellow", "red", "dark red"), 
+           center.zero = F)
+
+```
+
+```{r H_factor_heatmap, fig.height=6, fig.width=6}
+
+c(df1, df2) %<-% SummarizeAssocFeatures(seu.list[[8]], features.return = 6)
+swne::ggHeat(df2) + theme(axis.text.y = element_text(size = 6))
+
+selected.dims[["H"]] <- 1:10
+
+```
+<br>
+
+Now we can align the data so that the tissue sections are aligned. Below are all the raw HE images.
+
+<br>
+```{r plot_raw, fig.height=6, fig.width=9}
+
+for (seu in seu.list) {
+  ImagePlot(seu, method = "raster", ncols = 3)
+}
+
+```
+<br>
+
+## Mask images
+***
+
+No we can also mask the background. Because these tissue sections contain a lot low cell density regions, the default masking approach fails. We can define a custom masking function that works better for these images.
+
+<br>
+```{r mask_images}
+
+library(imager)
+
+# Define a custom masking fun
+custom_mask_fkn <- function (
+  im
+) {
+  im <- im %>% imgradient("xy") %>% enorm() %>% isoblur(3)
+  im <- im^0.1
+  im <- imager::threshold(im) 
+  im <- im[, , , 1] %>% as.cimg() %>% as.pixset()
+} 
+
+seu.list <- lapply(seu.list, function(seu) {
+  seu %>% MaskImages(channels.use = 1:3, custom.msk.fkn = custom_mask_fkn)
+})
+
+```
+<br>
+
+Now we have the images masked.
+
+<br>
+```{r plot_masked, fig.width=9, fig.height=6}
+
+for (seu in seu.list) {
+  ImagePlot(seu, method = "raster", ncols = 3)
+}
+
+```
+<br>
+
+## Align images
+***
+
+The HE images are already quite well aligned, but if we want to display results in 3D we need this to be more exact. We'll run the `AlignImages`function to automatically align the images to a reference (section 1 by default). For sample G we'll use section 2 as reference instead, because this is the section that was used for annotation
+
+<br>
+```{r align_images}
+
+seu.list <- lapply(seq_along(seu.list), function(i) {
+  seu <- seu.list[[i]]
+  if (i == 7) {
+    return(seu %>% AlignImages(reference.index = 2, use.masked = TRUE))
+  } else {
+    return(seu %>% AlignImages(use.masked = TRUE))
+  }
+})
+
+```
+<br>
+
+Now here the images are both masked and aligned.
+
+<br>
+```{r plot_masked_and_aligned, fig.width=9, fig.height=6}
+
+for (seu in seu.list) {
+  ImagePlot(seu, method = "raster", ncols = 3)
+}
+
+```
+<br>
+
+## Clustering
+***
+
+For clustering, we'll use the `FindNeighbors` and `FindClusters` functions from Seurat, using the NMF vectors as input and a resolution of 0.4. For each patient, we subset the NMF matrix to include only those vectors that wew manually selected and stored into `keep.dims`.
+
+<br>
+```{r cluster, warning=FALSE, message=FALSE, results="hide"}
+
+seu.list <- lapply(seq_along(seu.list), function(i) {
+  seu <- seu.list[[i]]
+  keep.dims <- selected.dims[[i]]
+  seu <- FindNeighbors(object = seu, dims = keep.dims, reduction = "NMF", verbose = FALSE)
+  seu <- FindClusters(seu, resolution = 0.4, verbose = FALSE)
+  return(seu)
+})
+
+```
+<br>
+
+### UMAP
+***
+
+Now we can run a UMAP computation to visualize clusters in a space that captures both global and local similarities. 
+
+<br>
+```{r umap, warning=FALSE, messages=FALSE, fig.height=10, fig.width=12}
+
+seu.list <- lapply(seq_along(seu.list), function(i) {
+  seu <- seu.list[[i]]
+  keep.dims <- selected.dims[[i]]
+  seu <- RunUMAP(object = seu, dims = keep.dims, reduction = "NMF", verbose = TRUE, n.neighbors = 30, n.epochs = 1e3)
+})
+
+tol10qualitative <- c("#332288", "#88CCEE", "#44AA99", "#117733", "#999933", "#DDCC77", "#661100", "#CC6677", "#882255", "#AA4499")
+p.list <- lapply(seq_along(seu.list), function(i) {
+  seu <- seu.list[[i]]
+  keep.dims <- selected.dims[[i]]
+  DimPlot(seu, reduction = "umap", pt.size = 0.5) 
+})
+cowplot::plot_grid(plotlist = p.list)
+
+p.list <- lapply(seq_along(seu.list), function(i) {
+  seu <- seu.list[[i]]
+  seu <- SetIdent(seu, value = "ids")
+  keep.dims <- selected.dims[[i]]
+  DimPlot(seu, reduction = "umap", pt.size = 0.5) 
+})
+cowplot::plot_grid(plotlist = p.list)
+
+```
+<br>
+
+### UMAP 3D
+***
+
+Another way of showing similarities in gene expression in a spatial visualization is to first compute UMAP i 3 dimensions and then color code these dimensions in RGB colorspace. 
+
+<br>
+```{r umap3d, warning=FALSE, messages=FALSE}
+
+seu.list <- lapply(seq_along(seu.list), function(i) {
+  seu <- seu.list[[i]]
+  keep.dims <- selected.dims[[i]]
+  seu <- RunUMAP(object = seu, dims = keep.dims, reduction = "NMF", verbose = TRUE, n.neighbors = 30, n.epochs = 1e3, n.components = 3, reduction.key = "UMAP3D_", reduction.name = "umap.3d")
+})
+
+```
+<br>
+
+### Plot UMAP 3D
+***
+
+Now that we have a 3-dimensional UMAP we can create a spatial visualziatio of these using the `blend` option of `ST.FeaturePlot`
+
+<br>
+```{r UMAP_3D_plot, fig.height=10, fig.width=12}
+
+p.list <- lapply(seu.list[1:4], function(seu) {
+  ST.DimPlot(seu, pt.size = 1.5, dims = 1:3, blend = T, reduction = "umap.3d", dark.theme = T, ncol = 6)
+})
+
+cowplot::plot_grid(plotlist = p.list, ncol = 1)
+
+```
+
+```{r UMAP_3D_plot_2, fig.height=10, fig.width=6}
+
+p.list <- lapply(seu.list[5:8], function(seu) {
+  ST.DimPlot(seu, pt.size = 1.5, dims = 1:3, blend = T, reduction = "umap.3d", dark.theme = T, ncol = 3)
+})
+
+cowplot::plot_grid(plotlist = p.list, ncol = 1)
+
+```
+<br>
+
+### DE analysis between clusters
+***
+
+There are no clear borders between the regions except in some few specific cases for example for "adipose tissue" and "normal breast glands". Because of this it is difficult to select a resolution that produces clusters which best explains the organization of the tissue. Instead we have set a constant reoslution parameter for all samples and use the generated clusters as a basis for a pairwise DE test to find markers. We could run with completely different clustering parameters but you tend to find that some clusters are more stable and tends to show up regardless of the parameter choice while other tend to break apart and reassemble. If we run a pariwise DE test we could filter out genes with a low avg_logFC and use this to keep clusters with a higher specificity.
+
+<br>
+```{r DE}
+
+de.markers <- lapply(seq_along(seu.list), function(i) {
+  seu <- seu.list[[i]]
+  seu <- SetIdent(seu, value = "seurat_clusters")
+  FindAllMarkers(seu, verbose = FALSE, logfc.threshold = 0.15)
+})
+
+```
+
+<br>
+
+### Filter markers 
+***
+
+Now we can select only up-regulated markers from the results. We'll keep marker genes with an adjusted p-value < 0.01 and an average log fold-change higher than 0.15.
+
+<br>
+```{r new_clusters}
+
+de.markers.filtered <- lapply(de.markers, function(de) {
+  de <- de %>% dplyr::filter(p_val_adj < 1e-2 & avg_logFC > 0.15) %>% arrange(cluster, -avg_logFC)
+})
+
+```
+<br>
+
+Read clusters annotations table and add cluster labels to Seurat object meta.data.
+
+<br>
+```{r add annotations}
+
+annotations <- read.csv("../res/ST-cluster/motivation.csv", stringsAsFactors = F)
+
+seu.list <- lapply(1:8, function(i) {
+  L <- LETTERS[i]
+  seu <- seu.list[[i]]
+  ann_subset <- subset(annotations, patient == L)
+  conv_clust <- setNames(ann_subset$annotated.as, nm = ann_subset$cluster)
+  seu$label <- conv_clust[seu$seurat_clusters %>% as.character()]
+  return(seu)
+})
+
+```
+<br>
+
+## pathway analysis
+***
+
+Here we'll use the Gene Ontology Biological Processes (GO:BP) data set to run pathway analysis.
+
+### GO BP
+
+<br>
+```{r pathway_analysis}
+
+library(gprofiler2)
+
+all.egmt <- lapply(seq_along(seu.list), function(i) {
+  de.marks <- de.markers.filtered[[i]] 
+   conv <- unique(seu.list[[i]]@meta.data$label)
+   names(conv) <- unique(seu.list[[i]]@meta.data$seurat_clusters)
+   de.marks$label <- conv[de.marks$cluster]
+   
+   egmt <- do.call(rbind, lapply((unique(de.marks$cluster) %>% as.character()), function(cl) {
+       
+     de <- subset(de.marks, cluster == cl)
+     x <- de$gene
+     egmt <- gost(query = x, organism = "hsapiens")
+     if (is.null(egmt)) {
+         return(NULL)
+     }
+     g <- as.data.frame(egmt$result)
+     if (nrow(g) > 0) {
+         g$cluster <- cl
+         g$label <- conv[cl]
+     }
+     return(g)
+   }))
+   egmt$red_term_name <- ifelse(nchar(egmt$term_name) > 60, paste0(substr(egmt$term_name, 1, 50), "..."), egmt$term_name)
+   return(egmt)
+})
+
+
+```
+
+Plot pathway analysis results including top 15 most significant pathways.
+
+```{r plot_pathways, fig.width=10, fig.height=8}
+
+pathways <- list()
+for (i in 1:8) {
+  egmt_d <- subset(all.egmt[[i]], source == "GO:BP") %>% dplyr::group_by(cluster) %>% dplyr::top_n(wt = -log10(p_value), n = 15) 
+  
+  p.pathway <- ggplot(egmt_d, aes(reorder(red_term_name, -(cluster %>% as.numeric())), intersection_size, fill = label, size = -log10(p_value))) + 
+    geom_point(stat = "identity", shape = 21) +
+    theme(axis.text.x = element_text(angle = 90)) +
+    coord_flip() +
+    facet_wrap(~cluster, ncol = 8) +
+    scale_y_continuous(limits = c(0, max(egmt_d$intersection_size) + 1)) +
+    scale_size_continuous(limits = c(1, max(-log10(egmt_d$p_value)) + 4), range = c(2, 10))
+  
+  pathways[[i]] <- p.pathway
+  plot(p.pathway)
+}
+
+```
+
+## Date
+
+<br>
+```{r date}
+
+date()
+
+```
+<br>
+
+## Session Info
+
+<br>
+```{r session_info}
+
+sessionInfo()
+
+```
+
