@@ -239,33 +239,30 @@ server <- function(input, output, session) {
 
         ggplot() +
           geom_point(data = subset(dt, sample == paste0(i)),
-                    mapping = aes_string(x = "warped_x",
-                                         y = paste0("dims[[", i, "]][2] - warped_y"),
-                                         fill = paste0("`", variable, "`")
-                                         ),
-                    stroke = EDGESTROKES[[input$edgecolor]],
-                    size = session$clientData$output_Aplot1_width/150,
-                    alpha = input$alpha,
-                    shape = 21) +
+                     mapping = aes_string(x = "warped_x",
+                                          y = paste0("dims[[", i, "]][2] - warped_y"),
+                                          fill = paste0("`", variable, "`")
+                                          ),
+                     stroke = EDGESTROKES[[input$edgecolor]],
+                     size = session$clientData$output_Aplot1_width/150,
+                     alpha = input$alpha,
+                     shape = 21) +
 
-  theme_empty +
+          theme_empty +
 
-  ggtitle(ifelse(rv$lastBtn %in% c("t1", "t2", "t3"),
-                                     paste0("Cell type: ", variable),
-                                     paste0("Gene: ", variable))) +
+          ggtitle(ifelse(rv$lastBtn %in% c("t1", "t2", "t3"),
+                        paste0("Cell type: ", variable),
+                        paste0("Gene: ", variable))) +
 
-  labs(fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"),
-                     "Cell type \nproportion",
-                     "Expression\n(Normalized)")
-       ) +
-
+          labs(fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"),
+                            "Cell type \nproportion",
+                            "Expression\n(Normalized)")) +
 
           scale_x_continuous(limits = c(0, dims[[i]][1]), expand = c(0, 0)) +
           scale_y_continuous(limits = c(0, dims[[i]][2]), expand = c(0, 0)) +
           scale_fill_gradientn(colours = COLORS[[input$cscale]])
-
-      },
-      bg = "transparent")
+              },
+              bg = "transparent")
     })
     })
 }
