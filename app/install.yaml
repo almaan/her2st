@@ -1,0 +1,19 @@
+--- # Packages to install
+
+CRAN:
+  - ggplot2
+  - jpeg
+  - Matrix
+  - grid
+  - magrittr
+  - magick
+  - zeallot
+  - shiny
+  - shinyWidgets
+  - shinycssloaders
+  - shinydashboard
+  - RColorBrewer
+  - viridis
+  - dplyr
+
+BioConductor:
