@@ -16,6 +16,10 @@
     width:300px;
 }
 
+.skin-blue .main-header .navbar{
+    margin-left:350px;
+}
+
 .skin-blue .main-header .logo:hover {
     background-color: #356c47;
 }
@@ -24,6 +28,7 @@
 .skin-blue .main-header .navbar .sidebar-toggle {
     background-color: #64d087;
     width:50px;
+    margin-left: -50px;
 }
 
 .skin-blue .main-header .navbar .sidebar-toggle:hover {

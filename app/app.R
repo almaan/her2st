@@ -2,48 +2,50 @@ library(ggplot2)
 library(jpeg)
 library(Matrix)
 library(grid)
-library(shiny)
 library(magrittr)
-library(shinycssloaders)
-library(shinydashboard)
 library(magick)
 library(zeallot)
-library(shinyWidgets)
 library(yaml)
+
+library(shiny)
+library(shinyWidgets)
+library(shinycssloaders)
+library(shinydashboard)
+
 
 source("utils.R")
 
 CONFIG <- read_yaml("config.yaml")
 PATIENTS <- names(CONFIG)
-N.PATIENTS <- length(PATIENTS)
 
 
 #### pre-run setup ####
 
 theme_empty <- make_empty_theme()
 
-dims.list <- readRDS("data/dims.list")
-imdims.list <- readRDS("data/imdims.list")
 var.features.list <- readRDS("data/var.features.list")
+imdims.list <- readRDS("data/imdims.list")
+dims.list <- readRDS("data/dims.list")
 data.list <- readRDS("data/data.list")
+
 sc.list <- readRDS("data/cs.list")
-scs <- Reduce(intersect, lapply(sc.list, colnames))
+scs <- Reduce(intersect, lapply(sc.list,
+                                colnames))
 
-t1.list <- readRDS("data/t1.list")
-t1.cells <- Reduce(intersect,
-                   lapply(t1.list,
-                          function(x){colnames(x[[1]])}))
+c(t1.list,
+  t2.list,
+  t3.list) %<-% lapply(1:3,
+                       function(x) {readRDS(file.path("data",
+                                                      paste0("t",
+                                                             x,
+                                                             ".list")))})
 
-t2.list <- readRDS("data/t2.list")
-t2.cells <- Reduce(intersect,
-                   lapply(t2.list,
-                          function(x){colnames(x[[1]])}))
-
-t3.list <- readRDS("data/t3.list")
-t3.cells <- Reduce(intersect,
-                   lapply(t3.list,
-                          function(x){colnames(x[[1]])}))
-
+c(t1.cells,
+  t2.cells,
+  t3.cells) %<-% lapply(list(t1.list,t2.list,t3.list),
+                        function(x){Reduce(intersect,
+                                          lapply(x,colnames))}
+                        )
 
 #### UI ####
 ui <- dashboardPage(
@@ -118,8 +120,6 @@ ui <- dashboardPage(
 
   )
 )
-
-
 
 ### SERVER ####
 server <- function(input, output, session) {
@@ -246,14 +246,18 @@ server <- function(input, output, session) {
                     size = session$clientData$output_Aplot1_width/150,
                     alpha = input$alpha,
                     shape = 21) +
-          theme_empty +
 
-          labs(title = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), paste0("Cell type: ", variable),
-                              paste0("Gene: ", variable)),
+  theme_empty +
 
-              fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"),
-                            "Cell type \nproportion",
-                            "Gene Expression\n(Normalized)")) +
+  ggtitle(ifelse(rv$lastBtn %in% c("t1", "t2", "t3"),
+                                     paste0("Cell type: ", variable),
+                                     paste0("Gene: ", variable))) +
+
+  labs(fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"),
+                     "Cell type \nproportion",
+                     "Expression\n(Normalized)")
+       ) +
+
 
           scale_x_continuous(limits = c(0, dims[[i]][1]), expand = c(0, 0)) +
           scale_y_continuous(limits = c(0, dims[[i]][2]), expand = c(0, 0)) +
