@@ -1,11 +1,11 @@
 # Spatial Deconvolution of HER2 positive Breast Tumors Reveals Novel Intercellular Relationships
-
+<div align="center"><span style="font-size:12px;font-style:italic">Alma Andersson, Ludvig Larsson, Linnea Stenbeck, Fredrik Salmén, Anna Ehinger, Sunny Wu,Ghamdan Al-Eryani, Alex Swarbrick, Åke Borg, Jonas Frisén, Camilla Engblom, Joakim Lundeberg</div></span>
 ## Description
 
-All data, results and code related to the paper "_Spatial Deconvolution of HER2 positive Breast Tumors Reveals Novel Intercellular Relationships_" can be found here within. For results that represent as large sets of images or tables, we provide scripts that are self-contained within this repository (i.e., all you need to do is to run them to reproduce our images) that allow you to reproduce these.
 
+All data, results and code related to the [paper](biorxiv) can be found here within. For results that represent as large sets of images or tables, we provide scripts that are self-contained within this repository (i.e., all you need to do is to run them to reproduce our images) that allow you to reproduce these.
 
-We have compiled a `shiny` app that allows you to explore the data and results interactively from your own browser, to see how you deploy and orient this tool see the section "[Shiny App](#shiny-app)" below.
+We have compiled a `shiny` app that allows you to explore the data and results interactively from your own browser, to see how you deploy and orient this tool go to the section "[Shiny App](#shiny-app)" below.
 
 ## Structure
 * `data/`
@@ -52,25 +52,25 @@ We have compiled a `shiny` app that allows you to explore the data and results i
 * `app/`
     * `data/` : pre-processed count matrices, cell type proportion tables and images used for shiny application
 
-`*` := with CLI (command line interface). Do ```./script.py -h``` to see all different options that can be selected/parameters to be configures.
+`*` := with CLI (command line interface). Do ```./script.py -h``` to see the different options that can be used.
 
 <hr>
 
 ## Shiny App 
 
-While all the data and results are available as raw files, we have also constructed a tool that allows you to interactively explore these. The tool will open up in your default browser, but it runs locally (i.e. you host all the files on your own computer). See below for instructions regarding how to setup and orient the tool.
+While all the data and results are available as raw files, we have also constructed a tool that allows you to **interactively explore** these. The tool will open up in your default browser, but it runs locally (i.e. you host all the files on your own computer). See below for instructions regarding how to setup and orient the tool.
 
 
 ### Setup
 
-Begin by cloning this repository. To do this open a terminal window, enter a directory where you'd like to clone the repository to (here `MY_DIR`) and then do:
+Begin by cloning this repository; to do so open a terminal, then enter a directory where you'd like to clone the repository into (here `MY_DIR`) and then do:
 
 ```sh
 cd MY_DIR
 git clone https://github.com/almaan/her2st.git .
 ```
 
-Next, we will install the necessary packages (e.g., `shiny`). We've prepared an install script for you, this will not overwrite you current package versions, that should take care of everything - but if you're missing some dependencies (C++ backends) you might have to do a manual install. For the installation, from the folder that you cloned this repo into - do:
+Next, we'll make sure that all the necessary packages (e.g., `shiny`) are installed. We've prepared an installation script for you - this will not overwrite you current package versions - that should take care of everything. However, if you're missing some dependencies (C++ backends) you might have to do a manual install. To check for and install missing packages; from the folder that you cloned this repo into, do:
 
 ```sh
 cd her2st/app
@@ -78,9 +78,9 @@ cd her2st/app
 
 ```
 
-_Note_ : Make sure `install-packages.R` have the proper permissions (e.g., by doing `chmod +x install-packages.R` on a Linux computer) before running it.
+_NOTE_ : Make sure `install-packages.R` have the proper permissions (e.g., by doing `chmod +x install-packages.R` on a Linux computer) before running it.
 
-If everything went as expected you should see a message like :
+If everything went as expected you should see a message like:
 
 ```sh
 
@@ -111,21 +111,24 @@ NONE
 
 In case you have any failed installs, try to install these manually and troubleshoot what dependencies you might be missing. 
 
-Now, once all the packages we are using are in place - we can start the app.
+Once all the packages are installed - we are ready to run the app!
 
 ### Usage 
 
-To launch the app, go to the `MY_DIR/her2st/app` directory (same as you installed packages from). Then run :
+To launch the app, do:
+
 ```sh
+cd MY_DIR/her2st/app
 ./launch.R
 ```
-_Note_ : Just as for `install-packages.R` make sure `launch.R` have the proper permissions before running it.
+_NOTE_ : Just as for `install-packages.R` make sure `launch.R` have the proper permissions before running it.
 
 This should open a new tab or browser-window, with an address like `127.0.0.1:XXXX` looking like:
 
-<img src=imgs/shiny-guide.png><br>
+<img src=imgs/shiny-guide.png alt="shiny app screenshot"><br>
 <br>
-As you can see (indicated with dashed red boxes and a number) you have some different options to choose from. To briefly describe these:
+
+As you can see you have some different options to choose from (indicated with dashed red boxes and a number). To elaborate some regarding these:
 
 1. **Select section** - click on the patient you want to visualize a section from, a drop-down menu will appear listing the different sections you can choose from.
 2. **Gene** - Select a gene of interest (GOI) to visualize the spatial expression of, overlaid on the tissue. You can either type the name your GOI or click the arrow to prompt a drop-down menu of genes to select from.
