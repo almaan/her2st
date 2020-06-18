@@ -1,4 +1,5 @@
 require(ggplot2)
+require(RColorBrewer)
 
 # FUNCTIONS -----------
 
@@ -32,14 +33,13 @@ make_empty_theme <- function(){
 ## VARIABLES ------------
 
 
-COLORS <- list("Greens" = RColorBrewer::brewer.pal(n = 9, name = "Greens"),
-               "Blues" = RColorBrewer::brewer.pal(n = 9, name = "Blues"),
-               "GrRd" = c("lightgray", "mistyrose", "red", "dark red"),
-               "RdBuYl" = rev(RColorBrewer::brewer.pal(n = 9, name = "RdYlBu")),
+COLORS <- list("Green" = RColorBrewer::brewer.pal(n = 9, name = "Greens"),
+               "Blue" = RColorBrewer::brewer.pal(n = 9, name = "Blues"),
+               "Red" = RColorBrewer::brewer.pal(n = 9, name = "Reds"),
+               "Blue-Yellow-Red" = rev(RColorBrewer::brewer.pal(n = 9, name = "RdYlBu")),
                "Spectral" = rev(RColorBrewer::brewer.pal(n = 11, name = "Spectral")),
                "viridis" = viridis::viridis(n = 9),
-               "magma" = viridis::magma(n = 9),
-               "Reds" = RColorBrewer::brewer.pal(n = 9, name = "Reds")
+               "magma" = viridis::magma(n = 9)
                )
 
 EDGESTROKES <- list("On" = 0.5,
