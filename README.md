@@ -73,7 +73,7 @@ git clone https://github.com/almaan/her2st.git .
 Next, we will install the necessary packages (e.g., `shiny`). We've prepared an install script for you, this will not overwrite you current package versions, that should take care of everything - but if you're missing some dependencies (C++ backends) you might have to do a manual install. For the installation, from the folder that you cloned this repo into - do:
 
 ```sh
-cd MY_DIR/her2st/app
+cd her2st/app
 ./install-packages.R
 
 ```
