@@ -1,10 +1,11 @@
 # Spatial Deconvolution of HER2 positive Breast Tumors Reveals Novel Intercellular Relationships
+
 <div align="center"><span style="font-size:12px;font-style:italic">Alma Andersson, Ludvig Larsson, Linnea Stenbeck, Fredrik Salmén, Anna Ehinger, Sunny Wu,Ghamdan Al-Eryani, Alex Swarbrick, Åke Borg, Jonas Frisén, Camilla Engblom, Joakim Lundeberg</div></span>
 
 ## Description
 
 
-All data, results and code related to the [paper](biorxiv) can be found here within. For results that represent as large sets of images or tables, we provide scripts that are self-contained within this repository (i.e., all you need to do is to run them to reproduce our images) that allow you to reproduce these.
+All data, results and code related to the [paper](biorxiv) can be found herewithin. For results that represent as large sets of images or tables, we provide scripts that are self-contained within this repository (i.e., all you need to do is to run them to reproduce our images) that allow you to reproduce these.
 
 We have compiled a `shiny` app that allows you to explore the data and results interactively from your own browser, to see how you deploy and orient this tool go to the section "[Shiny App](#shiny-app)" below.
 
@@ -139,3 +140,12 @@ As you can see you have some different options to choose from (indicated with da
 6. **Edgecolor** - Toggle whether edgecolor should be on or off
 
 _NOTE_: Only one of the features in 2 and 3 can be visualized at a time, the last one selected will be displayed.
+
+## Contact
+
+For questions related to the material presented at this site we recommend you to contact either:
+
+* Alma Andersson : alma.andersson [at] scilifelab.se
+* Ludvig Larsson : ludvig.larsson [at] scilifelab.se
+
+If you have code-specific questions, e.g., regarding the `shiny` app, opening an issue is the preferred way of communication.
