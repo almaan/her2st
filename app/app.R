@@ -48,6 +48,7 @@ c(t1.cells,
                         )
 
 #### UI ####
+
 ui <- dashboardPage(
   
   header = dashboardHeader(title = "HER2+ BC"),
@@ -97,7 +98,7 @@ ui <- dashboardPage(
              inputId = "cscale",
              label = "colors",
              choices = names(COLORS),
-             selected = "Greens"),
+             selected = "Green"),
            radioButtons(
              inputId = "edgecolor",
              label = "edgecolor",
@@ -191,7 +192,7 @@ server <- function(input, output, session) {
       inputId = "var",
       label = "Gene",
       choices = var.features.list[[index]],
-      selected = "ERBB2")
+      selected = var.features.list[[index]][1])
 
   })
 

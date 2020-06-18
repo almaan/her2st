@@ -2,4 +2,7 @@
 
 library(shiny)
 
-runApp("app.R",launch.browser = TRUE)
+runApp("app.R",
+       launch.browser = TRUE
+       )
+

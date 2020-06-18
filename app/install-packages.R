@@ -71,7 +71,7 @@ txt <- paste(c("\n----\n",
                "----\n",
                success,
                "\n\n----\n",
-               "Failed installs\n",
+               "Failed installs:\n",
                "----\n",
                fail),
                collapse  = "")

@@ -1,8 +1,11 @@
 # Spatial Deconvolution of HER2 positive Breast Tumors Reveals Novel Intercellular Relationships
 
 ## Description
-All data, results and code related to the paper _Spatial Deconvolution of HER2 positive Breast Tumors Reveals Novel Intercellular Relationships_ can be found here within. For large sets of images and tables, we provide scripts that are self-contained within this repository (i.e., all you need to do is to run them to reproduce our images)
 
+All data, results and code related to the paper "_Spatial Deconvolution of HER2 positive Breast Tumors Reveals Novel Intercellular Relationships_" can be found here within. For results that represent as large sets of images or tables, we provide scripts that are self-contained within this repository (i.e., all you need to do is to run them to reproduce our images) that allow you to reproduce these.
+
+
+We have compiled a `shiny` app that allows you to explore the data and results interactively from your own browser, to see how you deploy and orient this tool see the section "[Shiny App](#shiny-app)" below.
 
 ## Structure
 * `data/`
@@ -50,3 +53,85 @@ All data, results and code related to the paper _Spatial Deconvolution of HER2 p
     * `data/` : pre-processed count matrices, cell type proportion tables and images used for shiny application
 
 `*` := with CLI (command line interface). Do ```./script.py -h``` to see all different options that can be selected/parameters to be configures.
+
+<hr>
+
+## Shiny App 
+
+While all the data and results are available as raw files, we have also constructed a tool that allows you to interactively explore these. The tool will open up in your default browser, but it runs locally (i.e. you host all the files on your own computer). See below for instructions regarding how to setup and orient the tool.
+
+
+### Setup
+
+Begin by cloning this repository. To do this open a terminal window, enter a directory where you'd like to clone the repository to (here `MY_DIR`) and then do:
+
+```sh
+cd MY_DIR
+git clone https://github.com/almaan/her2st.git .
+```
+
+Next, we will install the necessary packages (e.g., `shiny`). We've prepared an install script for you, this will not overwrite you current package versions, that should take care of everything - but if you're missing some dependencies (C++ backends) you might have to do a manual install. For the installation, from the folder that you cloned this repo into - do:
+
+```sh
+cd MY_DIR/her2st/app
+./install-packages.R
+
+```
+
+_Note_ : Make sure `install-packages.R` have the proper permissions (e.g., by doing `chmod +x install-packages.R` on a Linux computer) before running it.
+
+If everything went as expected you should see a message like :
+
+```sh
+
+----
+Successful installs:
+----
+ggplot2
+jpeg
+Matrix
+grid
+magrittr
+magick
+zeallot
+shiny
+shinyWidgets
+shinycssloaders
+shinydashboard
+RColorBrewer
+viridis
+dplyr
+
+----
+Failed installs:
+----
+NONE
+
+```
+
+In case you have any failed installs, try to install these manually and troubleshoot what dependencies you might be missing. 
+
+Now, once all the packages we are using are in place - we can start the app.
+
+### Usage 
+
+To launch the app, go to the `MY_DIR/her2st/app` directory (same as you installed packages from). Then run :
+```sh
+./launch.R
+```
+_Note_ : Just as for `install-packages.R` make sure `launch.R` have the proper permissions before running it.
+
+This should open a new tab or browser-window, with an address like `127.0.0.1:XXXX` looking like:
+
+<img src=imgs/shiny-guide.png><br>
+<br>
+As you can see (indicated with dashed red boxes and a number) you have some different options to choose from. To briefly describe these:
+
+1. **Select section** - click on the patient you want to visualize a section from, a drop-down menu will appear listing the different sections you can choose from.
+2. **Gene** - Select a gene of interest (GOI) to visualize the spatial expression of, overlaid on the tissue. You can either type the name your GOI or click the arrow to prompt a drop-down menu of genes to select from.
+3. **Cell type** -  Select a tier and cell type (from a drop-down menu) to visualize the spatial distribution of this type (the proportion estimates) overlaid on the tissue.
+4. **Opacity** - Allows you to set the transparency of the markers
+5. **Colors** - Allows you to set the colormap used to visualize the values (default is Green)
+6. **Edgecolor** - Toggle whether edgecolor should be on or off
+
+_NOTE_: Only one of the features in 2 and 3 can be visualized at a time, the last one selected will be displayed.
