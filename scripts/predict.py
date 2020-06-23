@@ -214,5 +214,5 @@ def main()->None:
         fig.savefig(out_pth)
         plt.close("all")
 
-if __name == "__main__":
+if __name__ == "__main__":
     main()

@@ -15,6 +15,9 @@ from gprofiler import GProfiler
 
 from typing import Tuple,Union,List
 
+plt.rcParams['svg.fonttype'] = 'none'
+
+
 """ FEA - Functional Enrichment Analysis
 
 contains all functions to conduct and visualize
@@ -141,8 +144,20 @@ def main()->None:
        help = "organism",
        )
 
+    aa("-it","--image_type",
+       choices = ["png",
+                  "svg",
+                  "jpg",
+                  "gif",
+                  ],
+       default = "png",
+       help = "organism",
+       )
+
+
     aa("-cm","--color_map",
        default = "YlOrRd",
+       type = str,
        help = "colormap; choose from" \
            " matplotlib's library",
        )
@@ -154,7 +169,7 @@ def main()->None:
        type =str,
        help = "database to query against"\
        ". If non specified then GP:BP." \
-       ' Specify "all" to query againstall.',
+       ' Specify "all" to query against all.',
        )
 
     args = prs.parse_args()
@@ -182,7 +197,6 @@ def main()->None:
                    organism = args.organism,
                    db = args.database,
                    )
-
     bname = osp.basename(args.coefficients)
     bname = bname[0:min((20,len(bname)))]
     oname = osp.join(out_dir,"fea-" + bname)
@@ -193,7 +207,8 @@ def main()->None:
                  )
 
     try:
-        cmap = eval("plt.cm." + args.cmap)
+        cmap = eval("plt.cm." + args.color_map)
+        print(cmap)
     except:
         cmap = plt.cm.YlOrRd
 
@@ -202,7 +217,9 @@ def main()->None:
                           cmap = cmap,
                           )
 
-    fig.savefig(oname + ".png")
+    fig.savefig(oname + ".{}".format(args.image_type),
+                transparent = True,
+                )
 
 if __name__ == "__main__":
     main()

@@ -14,6 +14,8 @@ from scipy.stats import t as tdist
 
 from typing import Union,Tuple
 
+plt.rcParams['svg.fonttype'] = 'none'
+
 def _generate_null(xmat,
                    labels,
                    n_shuffle,
@@ -91,7 +93,7 @@ def make_pallete(enr_res : dict,
 
     n_types = xx.shape[1]
     n_regions = xx.shape[0]
-    figsize = (5 + n_regions * 0.5,
+    figsize = (2 + n_regions * 0.5,
                2 + n_types * 0.5)
 
     fig, ax = plt.subplots(1,1,
@@ -141,7 +143,8 @@ def make_plots(diffs : np.ndarray,
     n_regions = diffs.shape[0]
     n_feats = diffs.shape[1]
 
-    figsize = (n_regions*3,15)
+    figsize = (n_regions*0.2,
+               n_feats*1)
 
     vizlist = dict()
 
@@ -206,6 +209,7 @@ def run(features : pd.DataFrame,
         labels : Union[np.ndarray,pd.DataFrame],
         out_dir : str = "/tmp",
         tag : str = None,
+        image_type : str = "png",
         )->None:
 
     if tag is not None:
@@ -220,7 +224,9 @@ def run(features : pd.DataFrame,
 
     fig, ax = make_pallete(enr_res,features.columns.values)
 
-    fig.savefig(osp.join(out_dir,tag + "enrichment.png"))
+
+    fig.savefig(osp.join(out_dir,tag + "enrichment." + image_type),
+                transparent = True)
 
 def main(feats_pth : str,
          label_pth : str,
@@ -228,6 +234,7 @@ def main(feats_pth : str,
          out_dir : str,
          tag : str,
          subset_types : list,
+         image_type : str,
          ):
 
     read_file = lambda f : pd.read_csv(f,
@@ -243,7 +250,6 @@ def main(feats_pth : str,
                     any([bool(re.search(z.lower(),x.lower())) for z in subset_types])]
 
         keep_feat = list(set(keep_feat))
-        print(keep_feat)
         keep_feat = pd.Index(keep_feat)
         features = features.loc[:,keep_feat]
 
@@ -265,7 +271,7 @@ def main(feats_pth : str,
     if label_col is not None:
         labels = labels[label_col].values
 
-    run(features,labels,out_dir,tag)
+    run(features,labels,out_dir,tag,image_type)
 
 if __name__ == "__main__":
 
@@ -276,7 +282,9 @@ if __name__ == "__main__":
     prs.add_argument("-lc","--label_col",default = None)
     prs.add_argument("-o","--output")
     prs.add_argument("-t","--tag",default = None)
+    prs.add_argument("-ext","--extension",default = "png")
     prs.add_argument("-st","--subset_types",default = None,nargs = '+')
+
 
     args = prs.parse_args()
 
@@ -286,4 +294,5 @@ if __name__ == "__main__":
          args.output,
          args.tag,
          args.subset_types,
+         args.extension,
          )
