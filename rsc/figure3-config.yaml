@@ -1,0 +1,32 @@
+---
+cmap:
+  cluster: {0: [204, 0, 0],
+            3: [17,82,246],
+            5: [120,0,0],
+            4: [ 255, 166, 58 ],
+            }
+
+  region: {"invasive cancer" : [204, 0, 0],
+           "immune infiltrate" : [17,82,246],
+           "cancer in situ" : [ 255, 166, 58 ],
+            }
+
+data:
+  features_path: "../res/ST-deconv/props/major/G2/W.2020-03-04130406.862404.tsv.gz"
+  labels_paths:
+    region:  "../data/ST-pat/lbl/G2_labeled_coordinates.tsv"
+    cluster: "../res/ST-cluster/lbl/G2-cluster-annotation.tsv.gz"
+
+select_types: {"Epithelial":"Epithelial",
+              "CAFs" : "CAFs",
+              "Plasmablasts" : "Plasma cells",
+              "B-cells" : "B-cells",
+              }
+
+annotate: False
+
+labels_columns:
+  region: "label"
+  cluster: "label"
+
+
