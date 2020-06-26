@@ -1,4 +1,10 @@
 
+@font-face {
+    font-family: calibri;
+    src: url(calibri.ttf);
+}
+
+
 .body{
     color: #000;
     -webkit-text-stroke: 0px;
@@ -9,7 +15,7 @@
 }
 
 .skin-blue .main-header .logo {
-    font-family: "calibri", Times, "Time new roman", serif;
+    font-family: calibri, Times New Roman;
     font-weight: bold;
     font-size: 24pt;
     background-color: #64d087;
