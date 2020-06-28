@@ -15,6 +15,7 @@ CRAN:
   - RColorBrewer
   - viridis
   - dplyr
+  - extrafont
 
 
 BioConductor:

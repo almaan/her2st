@@ -6,6 +6,7 @@ library(magrittr)
 library(magick)
 library(zeallot)
 library(yaml)
+library(extrafont)
 
 library(shiny)
 library(shinyWidgets)
@@ -14,6 +15,7 @@ library(shinydashboard)
 
 
 source("utils.R")
+options(shiny.usecairo = FALSE)
 
 CONFIG <- read_yaml("config.yaml")
 PATIENTS <- names(CONFIG)
@@ -42,7 +44,9 @@ c(t1.list,
 
 c(t1.cells,
   t2.cells,
-  t3.cells) %<-% lapply(list(t1.list,t2.list,t3.list),
+  t3.cells) %<-% lapply(list(t1.list,
+                             t2.list,
+                             t3.list),
                         function(x){Reduce(intersect,
                                           lapply(x,colnames))}
                         )
@@ -223,10 +227,11 @@ server <- function(input, output, session) {
     return(list(data,
                 dims,
                 dfs,
-                variable = ifelse(rv$lastBtn == "t1", input$t1,
-                           ifelse(rv$lastBtn == "t2", input$t2,
-                           ifelse(rv$lastBtn == "t3", input$t3,
-                                  input$var)))))
+                variable = ifelse(rv$lastBtn %in% names(input),
+                                  input[[rv$lastBtn]],
+                                  input$var
+                                  )
+                  ))
 
   })
 
