@@ -93,8 +93,8 @@ def make_pallete(enr_res : dict,
 
     n_types = xx.shape[1]
     n_regions = xx.shape[0]
-    figsize = (2 + n_regions * 0.5,
-               2 + n_types * 0.5)
+    figsize = (4 + n_regions * 0.5,
+               2.5 + n_types * 0.5)
 
     fig, ax = plt.subplots(1,1,
                            figsize = figsize)
@@ -250,6 +250,7 @@ def main(feats_pth : str,
                     any([bool(re.search(z.lower(),x.lower())) for z in subset_types])]
 
         keep_feat = list(set(keep_feat))
+        keep_feat.sort()
         keep_feat = pd.Index(keep_feat)
         features = features.loc[:,keep_feat]
 
@@ -277,13 +278,25 @@ if __name__ == "__main__":
 
     prs = arp.ArgumentParser()
 
-    prs.add_argument("-f","--features")
-    prs.add_argument("-l","--labels")
-    prs.add_argument("-lc","--label_col",default = None)
-    prs.add_argument("-o","--output")
-    prs.add_argument("-t","--tag",default = None)
-    prs.add_argument("-ext","--extension",default = "png")
-    prs.add_argument("-st","--subset_types",default = None,nargs = '+')
+    prs.add_argument("-f",
+                     "--features")
+    prs.add_argument("-l",
+                     "--labels")
+    prs.add_argument("-lc",
+                     "--label_col",
+                     default = None)
+    prs.add_argument("-o",
+                     "--output")
+    prs.add_argument("-t",
+                     "--tag",
+                     default = None)
+    prs.add_argument("-ext",
+                     "--extension",
+                     default = "png")
+    prs.add_argument("-st",
+                     "--subset_types",
+                     default = None,
+                     nargs = '+')
 
 
     args = prs.parse_args()

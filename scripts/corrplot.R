@@ -12,17 +12,17 @@ subsetTypes <- function(cmat,keepers){
   orinames <- colnames(cmat)
   xnames <- colnames(cmat)
 
-  patterns <- c("\\.",
-              ",",
-              "_",
-              " ",
-              "-"
-              )
+  ## patterns <- c("\\.",
+  ##             ",",
+  ##             "_",
+  ##             " ",
+  ##             "-"
+  ##             )
 
-  for (ii in 1:length(patterns)) {
-    xnames <- gsub(patterns[ii],"",xnames)
-    keepers <- gsub(patterns[ii],"",keepers)
-  }
+  ## for (ii in 1:length(patterns)) {
+  ##   xnames <- gsub(patterns[ii],"",xnames)
+  ##   keepers <- gsub(patterns[ii],"",keepers)
+  ## }
 
   ynames <- c()
 
@@ -176,6 +176,7 @@ for (res in seq_along(pths)) {
                              sep = '\t',
                              header = T,
                              row.names = 1,
+                             check.names = F,
                              )
   ifelse(length(types) > 0,
          types <- intersect(types,
@@ -240,11 +241,13 @@ if (!is.null(args$name_map)) {
   reffer <- read.table(args$name_map,
                        sep = ',',
                        header=T,
-                       row.names = 1)
+                       row.names = 1,
+                       check.names = F,
+                       )
 
-  rownames(reffer) <-  gsub(" ","\\.",rownames(reffer))
-  rownames(reffer) <-  gsub("-","\\.",rownames(reffer))
-  rownames(reffer) <-  gsub("\\+","\\.",rownames(reffer))
+  ## rownames(reffer) <-  gsub(" ","\\.",rownames(reffer))
+  ## rownames(reffer) <-  gsub("-","\\.",rownames(reffer))
+  ## rownames(reffer) <-  gsub("\\+","\\.",rownames(reffer))
 
 
   mapper <- as.vector(reffer$new)

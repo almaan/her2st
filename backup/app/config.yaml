@@ -1,0 +1,75 @@
+---
+
+A:
+  n_sections: 6
+  image_directory: "imgs"
+  image_names:
+    - 'A1_HE_image_dark.png'
+    - 'A2_HE_image_dark.png'
+    - 'A3_HE_image_dark.png'
+    - 'A4_HE_image_dark.png'
+    - 'A5_HE_image_dark.png'
+    - 'A6_HE_image_dark.png'
+
+B:
+  n_sections: 6
+  image_directory: "/imgs"
+  image_names:
+    - 'B1_HE_image_dark.png'
+    - 'B2_HE_image_dark.png'
+    - 'B3_HE_image_dark.png'
+    - 'B4_HE_image_dark.png'
+    - 'B5_HE_image_dark.png'
+    - 'B6_HE_image_dark.png'
+
+C:
+  n_sections: 6
+  image_directory: "/imgs"
+  image_names:
+    - 'C1_HE_image_dark.png'
+    - 'C2_HE_image_dark.png'
+    - 'C3_HE_image_dark.png'
+    - 'C4_HE_image_dark.png'
+    - 'C5_HE_image_dark.png'
+    - 'C6_HE_image_dark.png'
+
+D:
+  n_sections: 6
+  image_directory: "/imgs"
+  image_names:
+    - 'D1_HE_image_dark.png'
+    - 'D2_HE_image_dark.png'
+    - 'D3_HE_image_dark.png'
+    - 'D4_HE_image_dark.png'
+    - 'D5_HE_image_dark.png'
+    - 'D6_HE_image_dark.png'
+E:
+    n_sections: 3
+    image_directory: "/imgs"
+    image_names:
+      - 'E1_HE_image_dark.png'
+      - 'E2_HE_image_dark.png'
+      - 'E3_HE_image_dark.png'
+
+F:
+  n_sections: 3
+  image_directory: "/imgs"
+  image_names:
+    - 'F1_HE_image_dark.png'
+    - 'F2_HE_image_dark.png'
+    - 'F3_HE_image_dark.png'
+
+G:
+    n_sections: 3
+    image_directory: "/imgs"
+    image_names:
+      - 'G1_HE_image_dark.png'
+      - 'G2_HE_image_dark.png'
+      - 'G3_HE_image_dark.png'
+H:
+    n_sections: 3
+    image_directory: "/imgs"
+    image_names:
+      - 'H1_HE_image_dark.png'
+      - 'H2_HE_image_dark.png'
+      - 'H3_HE_image_dark.png'

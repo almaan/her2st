@@ -1,0 +1,311 @@
+PackratFormat: 1.4
+PackratVersion: 0.5.0
+RVersion: 3.6.1
+Repos: CRAN=https://cran.rstudio.com/
+
+Package: BH
+Source: CRAN
+Version: 1.69.0-1
+Hash: 15f597ed227897f4f793b6161260f4b9
+
+Package: MASS
+Source: CRAN
+Version: 7.3-51.4
+Hash: 35b5e96d2946a20836d838f537bc7ab9
+
+Package: Matrix
+Source: CRAN
+Version: 1.2-17
+Hash: 3ee56b7c430e66a6222cf6d700788888
+Requires: lattice
+
+Package: R6
+Source: CRAN
+Version: 2.4.0
+Hash: 948a547c484e5bea15eee76cc53cce3f
+
+Package: RColorBrewer
+Source: CRAN
+Version: 1.1-2
+Hash: c0d56cd15034f395874c870141870c25
+
+Package: Rcpp
+Source: CRAN
+Version: 1.0.2
+Hash: d04e441a8d398e3d3a71f294c07fa94d
+
+Package: assertthat
+Source: CRAN
+Version: 0.2.1
+Hash: 622be49032fe50bd42e96aaef613e209
+
+Package: backports
+Source: CRAN
+Version: 1.1.5
+Hash: 35ad64fcf2063e2a52031b0f1a59d8f0
+
+Package: cli
+Source: CRAN
+Version: 1.1.0
+Hash: bc4e54014c2049f2605ad0c3ba0cce6b
+Requires: assertthat, crayon
+
+Package: colorspace
+Source: CRAN
+Version: 1.4-1
+Hash: 60a56e9998b8b58ee378db3dc91b27a5
+
+Package: crayon
+Source: CRAN
+Version: 1.3.4
+Hash: ff2840dd9b0d563fc80377a5a45510cd
+
+Package: curl
+Source: CRAN
+Version: 4.2
+Hash: 3d7392b36f838a538683f98e580f35dd
+
+Package: digest
+Source: CRAN
+Version: 0.6.22
+Hash: 824be063463b3709782ef29a3e8d7079
+
+Package: ellipsis
+Source: CRAN
+Version: 0.3.0
+Hash: 30b58109e4d7c6184a9c2e32f9ae38c6
+Requires: rlang
+
+Package: fansi
+Source: CRAN
+Version: 0.4.0
+Hash: f147621f72b561485bfffcae78c4f5d5
+
+Package: fastmap
+Source: CRAN
+Version: 1.0.1
+Hash: d272cd728e4095b3964181b44763f46c
+
+Package: ggplot2
+Source: CRAN
+Version: 3.2.1
+Hash: 7cf3f9df0089475f133ec23befca1032
+Requires: MASS, digest, gtable, lazyeval, mgcv, reshape2, rlang,
+    scales, tibble, viridisLite, withr
+
+Package: glue
+Source: CRAN
+Version: 1.3.1
+Hash: 660bbbe3803c7cf7c9489a7d99a9c0ed
+
+Package: gridExtra
+Source: CRAN
+Version: 2.3
+Hash: fa977bc1aab5588a08123b10ceb1ad3d
+Requires: gtable
+
+Package: gtable
+Source: CRAN
+Version: 0.3.0
+Hash: a9e7b0666eb933a0cb36779240b4462e
+
+Package: htmltools
+Source: CRAN
+Version: 0.4.0
+Hash: 3f49193aa22146296cee8ae091b6303a
+Requires: Rcpp, digest, rlang
+
+Package: httpuv
+Source: CRAN
+Version: 1.5.2
+Hash: bedc97351732877695aa0f20e32d6ad9
+Requires: BH, R6, Rcpp, later, promises
+
+Package: jpeg
+Source: CRAN
+Version: 0.1-8
+Hash: 189af3df9864c6aa8546033f08ba9358
+
+Package: jsonlite
+Source: CRAN
+Version: 1.6
+Hash: 5f969e213e966135393e3e304abf3f49
+
+Package: labeling
+Source: CRAN
+Version: 0.3
+Hash: ecf589b42cd284b03a4beb9665482d3e
+
+Package: later
+Source: CRAN
+Version: 1.0.0
+Hash: 205ee1ecb9ea284441563fc014b45ece
+Requires: BH, Rcpp, rlang
+
+Package: lattice
+Source: CRAN
+Version: 0.20-38
+Hash: 45211081d39bb6d5a89fd789105901aa
+
+Package: lazyeval
+Source: CRAN
+Version: 0.2.2
+Hash: 563563691bea3cde6945a98996d7c166
+
+Package: magick
+Source: CRAN
+Version: 2.2
+Hash: 208a067c9e4a192644ec6b5b20a3f196
+Requires: Rcpp, curl, magrittr
+
+Package: magrittr
+Source: CRAN
+Version: 1.5
+Hash: bdc4d48c3135e8f3b399536ddf160df4
+
+Package: mgcv
+Source: CRAN
+Version: 1.8-29
+Hash: ba1261e932861cdf4a30dc3d438a779b
+Requires: Matrix, nlme
+
+Package: mime
+Source: CRAN
+Version: 0.7
+Hash: 0d7563caf453c231b6f8c359c51eecc2
+
+Package: munsell
+Source: CRAN
+Version: 0.5.0
+Hash: 38d0efee9bb99bef143bde41c4ce715c
+Requires: colorspace
+
+Package: nlme
+Source: CRAN
+Version: 3.1-141
+Hash: 011c066e63a30a0a0462dfe1503cb506
+Requires: lattice
+
+Package: pillar
+Source: CRAN
+Version: 1.4.2
+Hash: 28ff1862b4e0c8761efca442e80a63d8
+Requires: cli, crayon, fansi, rlang, utf8, vctrs
+
+Package: pkgconfig
+Source: CRAN
+Version: 2.0.3
+Hash: 5ff5f2361851a49534c96caa2a8071c7
+
+Package: plyr
+Source: CRAN
+Version: 1.8.4
+Hash: 5c3737d7c1846e30d40c8c38110b5fcd
+Requires: Rcpp
+
+Package: promises
+Source: CRAN
+Version: 1.1.0
+Hash: 0404586e7e8dff0de5fde4a65f37e39b
+Requires: R6, Rcpp, later, magrittr, rlang
+
+Package: reshape2
+Source: CRAN
+Version: 1.4.3
+Hash: b7ea8a2e7a9df39c2346e78bd83e26f8
+Requires: Rcpp, plyr, stringr
+
+Package: rlang
+Source: CRAN
+Version: 0.4.1
+Hash: 686b7c4593f009713b9df03a2bb33124
+
+Package: scales
+Source: CRAN
+Version: 1.0.0
+Hash: f4f1b13b6774ee3122a36466d1bc50b8
+Requires: R6, RColorBrewer, Rcpp, labeling, munsell, viridisLite
+
+Package: shiny
+Source: CRAN
+Version: 1.4.0
+Hash: 7a1d8725849ecb792b4df2c084769c23
+Requires: R6, crayon, digest, fastmap, htmltools, httpuv, jsonlite,
+    later, mime, promises, rlang, sourcetools, xtable
+
+Package: shinyWidgets
+Source: CRAN
+Version: 0.4.9
+Hash: b317a5a7da642e6962a6382eab79d803
+Requires: htmltools, jsonlite, scales, shiny
+
+Package: shinycssloaders
+Source: CRAN
+Version: 0.2.0
+Hash: a6b8033e66d69998a2b54059e6d53476
+Requires: digest, glue, shiny
+
+Package: shinydashboard
+Source: CRAN
+Version: 0.7.1
+Hash: 9ff3e3d1aa83d9ae9b75c6f31e982aa6
+Requires: htmltools, promises, shiny
+
+Package: sourcetools
+Source: CRAN
+Version: 0.1.7
+Hash: d093478ac90064e670cd4bf1a99b47b6
+
+Package: stringi
+Source: CRAN
+Version: 1.4.3
+Hash: ed2a82fc7cc668c1345223d938cdfaf2
+
+Package: stringr
+Source: CRAN
+Version: 1.4.0
+Hash: 67da32dbb2a7a16f2ef124336358e54a
+Requires: glue, magrittr, stringi
+
+Package: tibble
+Source: CRAN
+Version: 2.1.3
+Hash: f59680d81ddc45fa3fcb8c07686d1d89
+Requires: cli, crayon, fansi, pillar, pkgconfig, rlang
+
+Package: utf8
+Source: CRAN
+Version: 1.1.4
+Hash: f3f97ce59092abc8ed3fd098a59e236c
+
+Package: vctrs
+Source: CRAN
+Version: 0.2.0
+Hash: daf77cb3dbcacd7fb619cb3748dc215f
+Requires: backports, digest, ellipsis, glue, rlang, zeallot
+
+Package: viridis
+Source: CRAN
+Version: 0.5.1
+Hash: 39edaec2078b4fc928afb73cc1ce6625
+Requires: ggplot2, gridExtra, viridisLite
+
+Package: viridisLite
+Source: CRAN
+Version: 0.3.0
+Hash: 78bb072c4f9e729a283d4c40ec93f9c6
+
+Package: withr
+Source: CRAN
+Version: 2.1.2
+Hash: d534108bcd5f34ec73e9eb523751ba20
+
+Package: xtable
+Source: CRAN
+Version: 1.8-4
+Hash: dc0d47261b678d26032363bebd050540
+
+Package: zeallot
+Source: CRAN
+Version: 0.1.0
+Hash: 10b2ed48e202b4db421ae864041dc4b2

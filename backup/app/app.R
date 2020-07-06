@@ -1,0 +1,336 @@
+library(ggplot2)
+library(jpeg)
+library(Matrix)
+library(grid)
+library(shiny)
+library(magrittr)
+library(shinycssloaders)
+library(shinydashboard)
+library(magick)
+library(zeallot)
+library(shinyWidgets)
+library(yaml)
+
+source("utils.R")
+
+CONFIG <- read_yaml("config.yaml")
+PATIENTS <- names(CONFIG)
+N.PATIENTS <- length(PATIENTS)
+
+
+#### pre-run setup ####
+
+<<<<<<< HEAD
+theme_empty <- make_empty_theme()
+
+
+
+=======
+# initiate a ggplot theme for use in plotting
+# (just getting rid of everything so we only see the image itself)
+theme_empty <- theme_bw() 
+theme_empty$line <- element_blank()
+theme_empty$rect <- element_blank()
+theme_empty$strip.text <- element_blank()
+theme_empty$axis.text <- element_blank()
+theme_empty$plot.title <- element_text(colour = "white", size = 20, hjust = 0, margin = margin(t = 10, b = -20)) #element_blank()
+theme_empty$axis.title <- element_blank()
+theme_empty$legend.position <- c(0.97, 0.5)
+theme_empty$legend.background <- element_rect(fill = "transparent", colour = "transparent")
+theme_empty$legend.text <- element_text(colour = "white")
+theme_empty$legend.title <- element_text(colour = "white")
+theme_empty$legend.key.size <- unit(10,"mm")
+theme_empty$legend.margin <- margin(10,50,10,50) 
+
+
+colorscales <- list("Blues" = RColorBrewer::brewer.pal(n = 9, name = "Blues"),
+                    "GrRd" = c("lightgray", "mistyrose", "red", "dark red"),
+                    "RdBuYl" = rev(RColorBrewer::brewer.pal(n = 9, name = "RdYlBu")),
+                    "Spectral" = rev(RColorBrewer::brewer.pal(n = 11, name = "Spectral")),
+                    "viridis" = viridis::viridis(n = 9),
+                    "magma" = viridis::magma(n = 9),
+                    "Blues" = RColorBrewer::brewer.pal(n = 9, name = "Blues"),
+                    "Reds" = RColorBrewer::brewer.pal(n = 9, name = "Reds"),
+                    "Greens" = RColorBrewer::brewer.pal(n = 9, name = "Greens"))
+
+#edgecolors <- list("On" = "black",
+#                   "Off" = "#00000000")
+edgestrokes <- list("On" = 0.5,
+                   "Off" = 0)
+
+numsections <- list("A"=1:6,
+                    "B" = 1:4,
+                    "C" = 1:6,
+                    "D" = 1:6,
+                    "E" = 1:3,
+                    "F" = 1:3,
+                    "G" = 1:3,
+                    "H" = 1:3)
+
+LS <- LETTERS[1:8]
+
+# set the image input file
+image.files <- list.files(pattern = "_HE_image_dark", path = "www", full.names = F)
+image.files <- list("A" = image.files[1:6],
+                    "B" = image.files[7:12],
+                    "C" = image.files[13:18],
+                    "D" = image.files[19:24],
+                    "E" = image.files[25:27],
+                    "F" = image.files[28:30],
+                    "G" = image.files[31:33],
+                    "H" = image.files[34:36],
+                    "J" = image.files[37:39])
+>>>>>>> 55daf7841d128f1718889a261d2bc3c5e35dadac
+dims.list <- readRDS("data/dims.list")
+imdims.list <- readRDS("data/imdims.list")
+var.features.list <- readRDS("data/var.features.list")
+data.list <- readRDS("data/data.list")
+sc.list <- readRDS("data/cs.list")
+scs <- Reduce(intersect, lapply(sc.list, colnames))
+
+t1.list <- readRDS("data/t1.list")
+t1.cells <- Reduce(intersect,
+                   lapply(t1.list,
+                          function(x){colnames(x[[1]])}))
+
+t2.list <- readRDS("data/t2.list")
+t2.cells <- Reduce(intersect,
+                   lapply(t2.list,
+                          function(x){colnames(x[[1]])}))
+
+t3.list <- readRDS("data/t3.list")
+t3.cells <- Reduce(intersect,
+                   lapply(t3.list,
+                          function(x){colnames(x[[1]])}))
+
+
+#### UI ####
+ui <- dashboardPage(
+  
+  header = dashboardHeader(title = "HER2+ BC"),
+
+  sidebar = dashboardSidebar(
+    width = 350,
+    column(width = 12,
+           do.call(sidebarMenu,
+                   c(lapply(PATIENTS,
+                     function(p){
+                       do.call(dropdownButton,
+                               c(lapply(1:CONFIG[[p]]$n_sections, function(i) {
+                                 menuItem(paste0("Section ", i),
+                                 tabName = paste0(p,"_section_", i),
+                                 icon = icon("angle-double-right"))
+                               }),
+          status = "default",
+          circle = FALSE,
+          size = "sm",
+          label = paste0("Patient ",p)))}),
+          id = "tabs"
+          ))),
+
+    column(width = 12,
+           uiOutput("var_features"),
+           selectInput(
+             inputId = "t1",
+             label = "Cell type | Tier 1",
+             choices = t1.cells,
+             selected = "Epithelial"),
+           selectInput(
+             inputId = "t2",
+             label = "Cell type | Tier 2",
+             choices = t2.cells,
+             selected = "Epithelial_cancer"),
+           selectInput(
+             inputId = "t3",
+             label = "Cell type | Tier 3",
+             choices = t3.cells,
+             selected = "Epithelial_cancer_Her2_SC"),
+           sliderInput(
+             inputId = "alpha",
+             label = "Opacity", value = 1,
+             min = 0, max = 1, step = 0.01
+           ),
+           selectInput(
+             inputId = "cscale",
+             label = "colors",
+             choices = names(COLORS),
+             selected = "Greens"),
+           radioButtons(
+             inputId = "edgecolor",
+             label = "edgecolor",
+<<<<<<< HEAD
+             choices = names(EDGECOLORS),
+=======
+             choices = names(edgestrokes),
+>>>>>>> 55daf7841d128f1718889a261d2bc3c5e35dadac
+             selected = "On")
+
+    )
+
+  ),
+
+  body = dashboardBody(
+    tags$head(
+           tags$link(rel = "stylesheet",
+                     type = "text/css",
+                     href = "css/custom.css"
+                     )
+         ),
+
+    uiOutput("STplot")
+
+  )
+)
+
+
+
+### SERVER ####
+server <- function(input, output, session) {
+
+
+  rv <- reactiveValues(lastBtn = character())
+  observeEvent(input$var, {
+
+    if (input$var > 0 ) {
+      rv$lastBtn = "gene"
+    }
+  })
+  observeEvent(input$t1, {
+    if (input$t1 > 0 ) {
+      rv$lastBtn = "t1"
+    }
+  })
+  observeEvent(input$t2, {
+    if (input$t2 > 0 ) {
+      rv$lastBtn = "t2"
+    }
+  })
+  observeEvent(input$t3, {
+    if (input$t3 > 0 ) {
+      rv$lastBtn = "t3"
+    }
+  })
+
+  output$STplot <- renderUI({
+
+    ls.A <- lapply(PATIENTS, function(p) {
+            lapply(1:CONFIG[[p]]$n_sections,
+                   function(i) {
+                     tabItem(tabName = paste0(p, "_section_", i),
+                             class = ifelse((p == "A") & (i == 1),
+                                            yes = "active",
+                                            no = ""),
+                             fluidRow(column(width = 12,
+                                             tags$head(tags$style(paste0("#",
+                                                                         p,
+                                                                         "plot",
+                                                                         i,
+                                                                         "{width:85vh !important; height:85vh !important;}"))),
+                                             div(id = "container",
+                                                 height = imdims.list[[p]][[i]][1],
+                                                 width = imdims.list[[p]][[i]][2],
+                                                 style = "position:relative;",
+                                                 div(tags$img(src = file.path(CONFIG[[p]]$image_directory,
+                                                                              CONFIG[[p]]$image_names[i]),
+                                                              style = paste0("width: 85vh; height: 85vh;")),
+                                                     style = "position:absolute; top:0; left:0;"),
+                                                 div(plotOutput(paste0(p, "plot", i)),
+                                                     style = "position:absolute; top:0; left:0;")
+                                                 )
+                                             ))
+                             )}
+                   )})
+
+      ls.A <- unlist(ls.A,recursive =  F)
+
+    do.call(tabItems, ls.A)
+
+  })
+
+  output$var_features <- renderUI({
+
+    index <- substr(input$tabs,1,1)
+    selectInput(
+      inputId = "var",
+      label = "Gene",
+      choices = var.features.list[[index]],
+      selected = "ERBB2")
+
+  })
+
+  get_data <- reactive({
+<<<<<<< HEAD
+    index <- substr(input$tabs, 1, 1)
+=======
+    index <- match(substr(input$tabs1, 1, 1), LS)
+>>>>>>> 55daf7841d128f1718889a261d2bc3c5e35dadac
+    c(gc_data, data) %<-% data.list[[index]]
+
+
+    if (rv$lastBtn == "t1") {
+      sc.data <- t1.list[[index]]
+      data[, input$t1] <- sc.data[, input$t1]
+    } else if (rv$lastBtn == "t2") {
+      sc.data <- t2.list[[index]]
+      data[, input$t2] <- sc.data[, input$t2]
+    } else if (rv$lastBtn == "t3") {
+      sc.data <- t3.list[[index]]
+      data[, input$t3] <- sc.data[, input$t3]
+    } else if (rv$lastBtn == "gene") {
+      data[, input$var] <- gc_data[input$var, ]
+    }
+
+    dims <- lapply(dims.list[[index]],
+                   function(x) x[2:3] %>% as.numeric())
+
+
+    dfs <- lapply(dims, diff)
+
+    return(list(data,
+                dims,
+                dfs,
+                variable = ifelse(rv$lastBtn == "t1", input$t1,
+                           ifelse(rv$lastBtn == "t2", input$t2,
+                           ifelse(rv$lastBtn == "t3", input$t3,
+                                  input$var)))))
+
+  })
+
+  # re-render the plot with the new data -------------------------
+
+  lapply(PATIENTS,function(p){
+    lapply(1:CONFIG[[p]]$n_sections, function(i) {
+      output[[paste0(p,"plot", i)]] <- renderPlot({
+        c(dt, dims, dfs, variable) %<-% get_data()
+
+        ggplot() +
+          geom_point(data = subset(dt, sample == paste0(i)),
+                    mapping = aes_string(x = "warped_x",
+                                          y = paste0("dims[[", i, "]][2] - warped_y"),
+                                          fill = paste0("`", variable, "`")
+                                          ),
+                    stroke = EDGESTROKES[[input$edgecolor]],
+                    size = session$clientData$output_Aplot1_width/150,
+                    alpha = input$alpha,
+                    shape = 21) +
+          theme_empty +
+
+          labs(title = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"), paste0("Cell type: ", variable),
+                              paste0("Gene: ", variable)),
+
+              fill = ifelse(rv$lastBtn %in% c("t1", "t2", "t3"),
+                            "Cell type \nproportion",
+                            "Gene Expression\n(Normalized)")) +
+
+          scale_x_continuous(limits = c(0, dims[[i]][1]), expand = c(0, 0)) +
+          scale_y_continuous(limits = c(0, dims[[i]][2]), expand = c(0, 0)) +
+          scale_fill_gradientn(colours = COLORS[[input$cscale]])
+
+      },
+      bg = "transparent")
+    })
+    })
+}
+
+# Run the application
+shinyApp(ui = ui, server = server)

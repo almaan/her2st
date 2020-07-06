@@ -7,3 +7,5 @@ corrsearch.py
 funcs.py
 utils.py
 convert-to-loompy.py
+update-files.py
+update-namemap.py
