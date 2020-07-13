@@ -5,3 +5,4 @@
 #scripts/Seurat_analysis_HER2_BC_samples.Rmd
 data/clinical-data
 app/*backup
+prep_sc_data.R

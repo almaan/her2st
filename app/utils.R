@@ -4,13 +4,13 @@ require(RColorBrewer)
 # FUNCTIONS -----------
 
 make_empty_theme <- function(){
-  theme_empty <- theme_bw() 
+  theme_empty <- theme_bw()
   theme_empty$line <- element_blank()
   theme_empty$rect <- element_blank()
   theme_empty$strip.text <- element_blank()
   theme_empty$axis.text <- element_blank()
   theme_empty$plot.title <- element_text(colour = "white",
-                                         family = "calibri",
+                                         #family = "calibri",
                                          face = "bold",
                                          size = 20,
                                          hjust = 0,
@@ -23,7 +23,7 @@ make_empty_theme <- function(){
   theme_empty$legend.title <- element_text(colour = "white")
   theme_empty$strip.background <- element_rect(fill="black")
   theme_empty$legend.key.size <- unit(10,"mm")
-  theme_empty$legend.margin <- margin(10,50,10,50) 
+  theme_empty$legend.margin <- margin(10,50,10,50)
 
   return(theme_empty)
 

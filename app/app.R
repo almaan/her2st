@@ -13,7 +13,6 @@ library(shinyWidgets)
 library(shinycssloaders)
 library(shinydashboard)
 
-
 source("utils.R")
 options(shiny.usecairo = FALSE)
 
@@ -29,10 +28,6 @@ var.features.list <- readRDS("data/var.features.list")
 imdims.list <- readRDS("data/imdims.list")
 dims.list <- readRDS("data/dims.list")
 data.list <- readRDS("data/data.list")
-
-sc.list <- readRDS("data/cs.list")
-scs <- Reduce(intersect, lapply(sc.list,
-                                colnames))
 
 c(t1.list,
   t2.list,
@@ -54,7 +49,7 @@ c(t1.cells,
 #### UI ####
 
 ui <- dashboardPage(
-  
+
   header = dashboardHeader(title = "HER2+ BC"),
 
   sidebar = dashboardSidebar(
