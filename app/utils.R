@@ -10,7 +10,7 @@ make_empty_theme <- function(){
   theme_empty$strip.text <- element_blank()
   theme_empty$axis.text <- element_blank()
   theme_empty$plot.title <- element_text(colour = "white",
-                                         #family = "calibri",
+                                         family = "calibri",
                                          face = "bold",
                                          size = 20,
                                          hjust = 0,
