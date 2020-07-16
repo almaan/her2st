@@ -1,6 +1,6 @@
 # Spatial Deconvolution of HER2 positive Breast Tumors Reveals Novel Intercellular Relationships
 
-<div align="center"><span style="font-size:10px;font-style:italic">Alma Andersson, Ludvig Larsson, Linnea Stenbeck, Fredrik Salmén, Anna Ehinger, Sunny Wu, Ghamdan Al-Eryani, Alex Swarbrick, Åke Borg, Jonas Frisén, Camilla Engblom, Joakim Lundeberg</div></span>
+<div align="center"><span style="font-size:10px;font-style:italic">Alma Andersson, Ludvig Larsson, Linnea Stenbeck, Fredrik Salmén, Anna Ehinger, Sunny Wu, Ghamdan Al-Eryani, Daniel L. Roden, Alex Swarbrick, Åke Borg, Jonas Frisén, Camilla Engblom, Joakim Lundeberg</div></span>
 
 ## Description
 
@@ -105,6 +105,7 @@ shinydashboard
 RColorBrewer
 viridis
 dplyr
+extrafont
 
 ----
 Failed installs:
