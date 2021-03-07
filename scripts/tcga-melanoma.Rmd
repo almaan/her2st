@@ -1,0 +1,275 @@
+---
+title: "TCGA TLS Metastasis Analysis"
+author: "Alma Andersson"
+output:
+  tufte::tufte_handout: default 
+  tufte::tufte_html: default 
+---
+
+## Load packages
+
+```{r}
+#load packages
+library(survival)
+library(survminer)
+library(ggplot2)
+library(RTCGA.clinical)
+library(RTCGA.rnaseq)
+
+```
+# Introduction
+
+
+
+
+## Load and Process Data
+
+We require three items to in order to conduct our analysis
+
+- RNAseq expression data associated with each patient sample
+- Clinical data associated with each patient sample
+- Coefficients used in the predictive model
+
+The TCGA data can be accessed from the two packages `RTCGA.clinical` and
+`RTCGA.rnaseq`, while the coefficients are those obtained from training our
+model on patient G and H.
+
+We will load each of these elements in sequential order, begining with the count
+data. The melanoma data from `RTCGA` is found in the object `SKCM.rnaseq`.
+
+```{r}
+# get expression data from the RTCGA package
+cnt <- as.data.frame(expressionsTCGA(SKCM.rnaseq))
+# update rownames to patient identifers
+rownames(cnt) <- cnt$bcr_patient_barcode
+# remove nun-numeric (and irrelevant) information
+cnt$bcr_patient_barcode <- NULL
+cnt$dataset <- NULL
+# remove samples and genes with 0 expression
+cnt <- cnt[rowSums(cnt)> 0 , colSums(cnt)> 0]
+```
+
+Before removing any samples based on other conditions, we will also normalize
+out data, as necessary to use it as input for the predicitve model. This means
+that we will divide each sample by its library size, followed by a division of
+each gene by its standard deviation.
+
+```{r}
+# get library size
+cntSums <- rowSums(cnt)
+# divide by library size
+cnt <- sweep(cnt,MARGIN = 1,FUN = "/",STATS = cntSums)
+# get gene standard deviation
+cntStd <- apply(cnt,MARGIN = 2,FUN = sd)
+# divide by gene standard deviation
+cnt <- sweep(cnt,MARGIN = 2, FUN = "/", STATS =cntStd)
+```
+
+The clinical data for the melanoma set is available in the `SKCM.clinical`
+object from the `RTCGA.rnaseq` package. The previous study only used
+_metastases_ in their analysis, and *not* primary tumors, hence we will filter
+the data w.r.t. to this condition. We will also extract survival data from our
+meta data, as this is what we are interested in.
+
+```{r}
+# access clinical data
+mta <- SKCM.clinical
+# filter for metastases
+mta <- mta[mta$patient.clinical_cqcf.tumor_type == "metastatic",]
+# get survival data
+survData <- survivalTCGA(mta)
+# update rownames to patient identifiers
+rownames(survData) <- survData$bcr_patient_barcode
+```
+
+
+
+```{r}
+# the path is set relative to the her2st/scripts folder
+coefs.pth <- "/home/alma/Documents/PhD/papers/HER2/her2st/res/TLS-pred/coef-full.tsv.gz"
+# read coefs
+coefs.ori <- read.table(coefs.pth,sep = '\t',row.names = 1, header = 1)
+coefs <- coefs.ori
+# store intercept value
+intercept <- coefs["intercept",]
+```
+
+
+## Match data
+
+Once all of our data has been loaded, we need to make sure that expression data,
+survival data and the coefs are matched. I.e., that rows and columns
+represent the same information in all objects (when applicable).
+
+We start by adjusting the patient identifiers in our expression data to be of
+the same format as the meta data.
+
+```{r}
+# extract 3 first fields of patient identifiers
+new.rownames <- sapply(rownames(cnt),
+                       function(x){paste(strsplit(x,"-")[[1]][1:3],collapse = "-")})
+
+# convert to characte vector
+new.rownames <- as.character(new.rownames)
+# check for duplicates
+n.duplicates <- sum(duplicated(new.rownames))
+
+if (n.duplicates > 0) {
+  sprintf("[WARNING] : %d duplicates found",n.duplicates)
+} else {
+  sprintf("[INFO] : No duplicates found!")
+}
+# assign new rownames
+rownames(cnt) <- new.rownames
+```
+
+We continue to modify the expression data, this time extracting the Gene Symbols
+from the compund gene identifiers. The reason for this is to make it compatible
+with the model coefficients.
+
+```{r}
+# extract gene symbols
+new.colnames <- as.character(sapply(colnames(cnt),
+                                    function(x) {strsplit(x,"\\|")[[1]][1]}))
+# assign new colnames
+colnames(cnt) <- new.colnames
+```
+
+As a final - and **essential** step before conducting the actual analysis, we
+will match the objects. We begin with the model coefficients and the genes in
+the expression data.
+
+```{r}
+# find genes that are present in both object
+inter.genes <- intersect(rownames(coefs),
+                         colnames(cnt))
+# keep only interecting genes and match order
+cnt <- cnt[,inter.genes]
+coefs <- coefs[inter.genes,]
+
+```
+
+We then continue by matching the survival data (derived from the clinical meta
+data) with the expression data
+
+```{r}
+# find identifiers present in both objects
+inter.sample <- intersect(rownames(survData),rownames(cnt))
+# keep only interecting identifiers and match order
+cnt <- cnt[inter.sample,]
+survData <- survData[inter.sample,]
+
+```
+
+As a "final touch" we will convert the days given in the survival data into months.
+
+```{r}
+# store days in new column
+survData$days <- survData$times
+# convert time from days to months
+survData$times <- survData$times / (365 / 12)
+```
+
+
+## Analysis
+
+Once the data is curated, we may proceed to actually analyze our data.
+Naturally, we begin by applying our predictive model you the now normalized
+expression data.
+
+The linear model we use surmounts to the following expression
+
+$$
+\bar{\mathbf{y}} = \mathbf{X}\boldsymbol{\beta} + \beta_0 \mathbf{1}
+$$
+
+Where $\mathbf{X} \in R^{S\times G}$ is the expression matrix [samples x genes],
+$\boldsymbol{\beta}$ is our coefficients, $\beta_0$ represents the intercept,
+$\mathbf{1}$ is $S$-dimensional vector of ones, $\bar{\mathbf{y}}$ is evidently
+the predeicted TLS-score.
+
+Implementing htis model we have:
+
+```{r}
+# predict TLS-score
+score <- as.matrix(cnt) %*% coefs + intercept
+```
+
+We can also inspect the score distribution to gauge how our values are spread
+```{r}
+hist(score)
+```
+
+
+Next we will stratify the scores into $5$ different groups, based on on which
+which _quintile_ they fall into. We will add this information into the survival
+data as well, as it will be our basis for the stratification in the survival
+analysis.
+
+```{r}
+# compute quintile values
+qs <- quantile(score,probs = seq(0,1,0.2))
+# get numberic identifiers for quintiles
+labels <- seq(length(qs)-1)
+# stratify
+strat <- cut(score,
+             breaks = qs,
+             labels = labels,
+             include.lowest = TRUE,
+             right = FALSE) 
+
+# add to survival data
+survData$tls <- strat
+```
+
+To mimic the _trichotomization_ described in the reference publication, we will
+discard samples that fall in the 2:nd and 4:th quantile, while the remaining
+groups are considered as our equivalents to the three groups "low", "high" and
+"intermediate".
+
+```{r}
+# create map between numeric group and category label
+mapper <- c("low","intermediate","high")
+names(mapper) <- c("1","3","5")
+# subset w.r.t. the three specidied tiers
+sub.survData <- survData[survData$tls %in% names(mapper),]
+# map numeric values to category
+sub.survData$TLS <- mapper[as.character(sub.survData$tls)]
+# reorder factors
+sub.survData$TLS <- factor(sub.survData$TLS,
+                           levels = as.vector(mapper)
+                           )
+```
+
+Now once the data is stratified, we can conduct the survival analysis and
+generate Kaplan-Meier plots. We will use some neat functions from `survminer`
+for this purpose.
+
+```{r,fig.width=5,fig.height=5}
+# set colors to mimic those of referene publication
+color <- c("#F3AC32","#4EC4C7","#BDBDBD")
+# make legends
+legends <- sapply(as.vector(mapper), function(x){ paste("TLS[",x,"]",collapse = "",sep = "")})
+# generate KM-plots, stratify by TLS category
+ggsurvplot(
+  fit = survfit(Surv(times,patient.vital_status) ~ TLS,
+                data=sub.survData),
+  ylab = "Overall survival (%)",
+  xlab = "Time (months)",
+  xlim = c(0,151),
+  palette = color,
+  break.time.by = 50,
+  size = 3,
+  censor.size = 1,
+  surv.scale = "percent",
+  legend.labs = legends,
+  pval = TRUE
+  )
+
+```
+
+This can then be compared with the results from the reference publication:
+
+![](./imgs/tls-km-ori.png)
+
+
