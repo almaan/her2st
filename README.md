@@ -11,8 +11,8 @@ We have compiled a `shiny` app that allows you to explore the data and results i
 
 ## Data access
 A lot of people have inquired about access to the data used in this manuscript,
-all data is accessible att
-[this](https://zenodo.org/record/3957257#.Y4LB-rLMIfg) repository. However, the
+all data is accessible at
+[this](https://zenodo.org/record/3957257#.Y4LB-rLMIfg) Zenodo repository. **However**, the
 data is _encrypted_ using [7z](https://7-zip.org/7z.html). To decrypt these files, use
 the following passwords:
 
