@@ -9,6 +9,18 @@ All data, results and code related to the [paper](biorxiv) can be found herewith
 
 We have compiled a `shiny` app that allows you to explore the data and results interactively from your own browser, to see how you deploy and orient this tool go to the section "[Shiny App](#shiny-app)" below.
 
+# Data access
+A lot of people have inquired about access to the data used in this manuscript,
+all data is accessible att
+[this](https://zenodo.org/record/3957257#.Y4LB-rLMIfg) repository. However, the
+data is _encrypted_ using [7z](https://7-zip.org/7z.html). To decrypt these files, use
+the following passwords:
+
+* count matrices and images: `zNLXkYk3Q9znUseS`
+* meta data and spot selection: `yUx44SzG6NdB32gY`
+
+For further questions, please see contact details  below.
+
 ## Structure
 * `data/`
     * `ST-cnts/` : contains data for the 36 breast cancer sections used in this study
@@ -149,7 +161,7 @@ _NOTE_: Only one of the features in 2 and 3 can be visualized at a time, the las
 
 For questions related to the material presented at this site we recommend you to contact either:
 
-* Alma Andersson : alma.andersson [at] scilifelab.se
-* Ludvig Larsson : ludvig.larsson [at] scilifelab.se
+* Alma Andersson : alma.andersson [at] differentiable [dot] net
+* Ludvig Larsson : ludvig.larsson [at] scilifelab [dot] se
 
 If you have code-specific questions, e.g., regarding the `shiny` app, opening an issue is the best way to communicate this if a quick response is desired.
