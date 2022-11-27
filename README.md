@@ -9,7 +9,7 @@ All data, results and code related to the [paper](biorxiv) can be found herewith
 
 We have compiled a `shiny` app that allows you to explore the data and results interactively from your own browser, to see how you deploy and orient this tool go to the section "[Shiny App](#shiny-app)" below.
 
-# Data access
+## Data access
 A lot of people have inquired about access to the data used in this manuscript,
 all data is accessible att
 [this](https://zenodo.org/record/3957257#.Y4LB-rLMIfg) repository. However, the
